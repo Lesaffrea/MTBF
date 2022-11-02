@@ -12,10 +12,14 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(ggeffects)
+library(ggpubr)
 library(janitor)
 output_data <-read.csv(stringr::str_c(here::here(),"/data/output.table.csv"), sep=",", skipNul = TRUE,fileEncoding="latin1" )
 output_data  <-clean_names(output_data) %>%
                       dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y"))
+output_data   <-output_data %>%
+                      dplyr::filter( !row_number() %in% which(duplicated(output_data)))
+
 ```
 
 
@@ -24,20 +28,52 @@ output_data  <-clean_names(output_data) %>%
 
 ## Overview
 
-We show below the amount of failures for the devices. 
+We show below the amount of failures for the devices. We check one material 40607997. 
 
 ```{r dsp_info,echo=FALSE}
 process_data <-output_data %>%
-                      dplyr::group_by(material) %>%
+                      dplyr::group_by(functional_location) %>%
                       dplyr::summarise( nb_failures = n(),
                                         start_date = min(scheduled_start),
                                         end_date   = max(scheduled_start))  %>%
-                      dplyr::arrange( desc(nb_failures)) %>%
-                      dplyr::filter(!is.na(material))
+                      dplyr::arrange( desc(nb_failures)) 
   
 knitr::kable(process_data[1:15,])
 
+one_material <- output_data %>%
+                    dplyr::filter( functional_location =="3021BRC501C503ELEM.PULL.TAPU") %>%
+                    dplyr::select(-material_description) %>%
+                    dplyr::distinct() %>%
+                    dplyr::arrange(scheduled_start )  %>%
+                    dplyr::mutate( day_bet_failure = scheduled_start- lag(scheduled_start)) 
+                
 
 ```
 
+The distribution for the failure for the  floc **3021BRC501C503ELEM.PULL.TAPU** are as follow, we have a bimodal distribution here. 
+
+```{r dsp_dist,echo=FALSE, warning=FALSE, message=FALSE,fig.align="center"}
+dsp_all <- ggplot(data=one_material) +
+  geom_density(aes(x=day_bet_failure), col="lightblue", fill="lightblue") +
+  theme_minimal() +
+  labs(title="Floc 3021BRC501C503ELEM.PULL.TAPU", x="Days between failure")
+
+
+dsp_bearing <- one_material %>%
+    dplyr::filter( stringr::str_detect(simplified_failure_mode, "Bearing")) %>%
+      ggplot(data=.) +
+        geom_density(aes(x=day_bet_failure), col="lightblue", fill="lightblue") +
+        theme_minimal() +
+        labs(title="Floc bearing only ", x="Days between failure")
+
+dsp_lagging <- one_material %>%
+    dplyr::filter( stringr::str_detect(simplified_failure_mode, "Lagging")) %>%
+      ggplot(data=.) +
+        geom_density(aes(x=day_bet_failure), col="lightblue", fill="lightblue") +
+        theme_minimal() +
+        labs(title="Lagging only ", x="Days between failure")
+
+
+ggarrange( dsp_all, dsp_bearing, dsp_lagging)
+```
 
