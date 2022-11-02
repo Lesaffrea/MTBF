@@ -1,0 +1,43 @@
+---
+title: "MTBF"
+author: "Alain Lesaffrer"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+```{r init, echo=FALSE, message=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggeffects)
+library(janitor)
+output_data <-read.csv(stringr::str_c(here::here(),"/data/output.table.csv"), sep=",", skipNul = TRUE,fileEncoding="latin1" )
+output_data  <-clean_names(output_data) %>%
+                      dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y"))
+```
+
+
+## Summary
+
+
+## Overview
+
+We show below the amount of failures for the devices. 
+
+```{r dsp_info,echo=FALSE}
+process_data <-output_data %>%
+                      dplyr::group_by(material) %>%
+                      dplyr::summarise( nb_failures = n(),
+                                        start_date = min(scheduled_start),
+                                        end_date   = max(scheduled_start))  %>%
+                      dplyr::arrange( desc(nb_failures)) %>%
+                      dplyr::filter(!is.na(material))
+  
+knitr::kable(process_data[1:15,])
+
+
+```
+
+
