@@ -78,7 +78,7 @@ dsp_lagging <- one_material %>%
 ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 ```
 
-We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**.
+We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**, the bootstrap is dome with 500 samples, in this case we can wonder about the zero occurrence.
 
 ```{r bootlagging, echo=FALSE}
 all_lagging <- one_material %>%
@@ -90,7 +90,7 @@ all_boot <-list()
 for( index in 1:20){
   all_boot[[index]] <-all_lagging_df$values[sample(nrow(all_lagging_df), 500, replace=TRUE)]
 }
-
+hist(as.numeric(all_boot[[16]]), main="Example of bootstrap", xlab = "Number days", col="lightblue")
 
 
 ```
