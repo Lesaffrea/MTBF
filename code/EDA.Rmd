@@ -14,6 +14,7 @@ library(ggplot2)
 library(ggeffects)
 library(ggpubr)
 library(janitor)
+library(bootstrap)
 output_data <-read.csv(stringr::str_c(here::here(),"/data/output.table.csv"), sep=",", skipNul = TRUE,fileEncoding="latin1" )
 output_data  <-clean_names(output_data) %>%
                       dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y"))
@@ -50,7 +51,7 @@ one_material <- output_data %>%
 
 ```
 
-The distribution for the failure for the  floc **3021BRC501C503ELEM.PULL.TAPU** are as follow, we have a bimodal distribution here. 
+The distribution for the failure for the  floc **3021BRC501C503ELEM.PULL.TAPU** are as follow, we have a bimodal distribution here. One should be careful as the number of sample could be low, in case of *lagging* we have only few samples, therefor some enhancement such as *bootstrap* must be used. 
 
 ```{r dsp_dist,echo=FALSE, warning=FALSE, message=FALSE,fig.align="center"}
 dsp_all <- ggplot(data=one_material) +
@@ -76,4 +77,23 @@ dsp_lagging <- one_material %>%
 
 ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 ```
+
+We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**.
+
+```{r bootlagging, echo=FALSE}
+all_lagging <- one_material %>%
+    dplyr::filter( stringr::str_detect(simplified_failure_mode, "Lagging"))
+all_lagging_df <-t(as.data.frame.matrix(t(table(all_lagging$day_bet_failure))))
+all_lagging_df <-as.data.frame.matrix(all_lagging_df)
+all_lagging_df$values <-rownames(all_lagging_df)
+all_boot <-list()
+for( index in 1:20){
+  all_boot[[index]] <-all_lagging_df$values[sample(nrow(all_lagging_df), 500, replace=TRUE)]
+}
+
+
+
+```
+
+
 
