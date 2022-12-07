@@ -7,7 +7,7 @@ output:
     theme: architect
     highlight: github
 ---
-```{r init, echo=FALSE, message=FALSE}
+```{r init, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -26,6 +26,9 @@ output_data   <-output_data %>%
 
 ## Summary
 
+In this document, we explore the **MTBF** based on a data set from **Rio**. The main aim was about how to calculate the **MTBF**, which could be valid. 
+
+In the second stage, we test small sample and check if we can build synthetic data set out of small sample.
 
 ## Overview
 
@@ -78,7 +81,13 @@ dsp_lagging <- one_material %>%
 ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 ```
 
-We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**, the bootstrap is dome with 500 samples, in this case we can wonder about the zero occurrence.
+# Boostrap 
+
+We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**, the bootstrap is dome with 500 samples, in this case we can wonder about the zero occurrence in the rginal data set. We build the sample in this way:
+
+1. Build a matrix with the number of days between failures as values
+
+2. Do a bootstrap using sample with replacement with 500 samples 
 
 ```{r bootlagging, echo=FALSE}
 all_lagging <- one_material %>%
@@ -96,4 +105,47 @@ hist(as.numeric(all_boot[[16]]), main="Example of bootstrap", xlab = "Number day
 ```
 
 
+We do the same bu we remove the zero day between failure from the data set. The lagging type has very few samples as shown below. 
+
+
+```{r bootlagging_2, echo=FALSE}
+all_lagging <- one_material %>%
+    dplyr::filter( stringr::str_detect(simplified_failure_mode, "Lagging")) %>%
+    dplyr::filter( day_bet_failure > 0 )
+all_lagging_df <-t(as.data.frame.matrix(t(table(all_lagging$day_bet_failure))))
+all_lagging_df <-as.data.frame.matrix(all_lagging_df)
+all_lagging_df$values <-rownames(all_lagging_df)
+
+set.seed(123)
+n <-length(unique(all_lagging$day_bet_failure))
+theta <-function(x,df){ df$value[x]}
+nb_sample <-100
+bootsample <-bootstrap(1:n, nb_sample, theta, all_lagging_df)
+result <-data.frame()
+for( index in 1:nb_sample){
+  tmp <-as.data.frame.table(table(bootsample$thetastar[,index]))
+  if(nrow(result) == 0 ){
+     result <- tmp
+  }else{
+    result <-result %>%
+                     rbind(tmp)
+  }  
+}
+
+result <-result %>%
+            dplyr::group_by(Var1) %>%
+            dplyr::summarise( total = sum(Freq))
+
+```
+
+
+|  Reference    | Value  |
+|--------------|--------|
+|  Number samples original | ```r nrow(all_lagging)``` |
+
+After bootstrap for hundred samples, with zero excluded. We come to a uniform distribution as the seed was uniform. We come to similar samples as before. This method could be used to build a prior if we use Bayes type of statistics. 
+
+```{r boostrap_small, echo=FALSE}
+knitr::kable(result)
+```
 
