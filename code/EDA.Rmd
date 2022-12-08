@@ -26,7 +26,23 @@ output_data   <-output_data %>%
 
 ## Summary
 
-In this document, we explore the **MTBF** based on a data set from **Rio**. The main aim was about how to calculate the **MTBF**, which could be valid. 
+In this document, we explore the **MTBF** based on a data set from **Rio**. The main aim was about how to calculate the **MTBF**, which could be valid. To build this document, the **SKF** document **Bearing damage and failure analysis** has been  used. 
+
+ For information the bearings failures, which are exceptional as most bearings live longer that the device they are associated with. 
+ 
+ |  Type of failures for bearings |
+ |--------------------------------|
+ |  1/3 fatigue                   |
+ |  1/3 lubrication problems      |
+ |  1/6 contaminants              |
+ |  1/6 others                    |
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 In the second stage, we test small sample and check if we can build synthetic data set out of small sample.
 
@@ -101,7 +117,7 @@ for( index in 1:20){
 }
 hist(as.numeric(all_boot[[16]]), main="Example of bootstrap", xlab = "Number days", col="lightblue")
 
-
+all_bearing <- one_material %>% dplyr::filter( stringr::str_detect(simplified_failure_mode, "Bearing"))
 ```
 
 
