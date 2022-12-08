@@ -38,12 +38,8 @@ In this document, we explore the **MTBF** based on a data set from **Rio**. The 
  |  1/6 others                    |
  
  
+ One point, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearli impossible. 
  
- 
- 
- 
- 
-
 In the second stage, we test small sample and check if we can build synthetic data set out of small sample.
 
 ## Overview
@@ -163,5 +159,19 @@ After bootstrap for hundred samples, with zero excluded. We come to a uniform di
 
 ```{r boostrap_small, echo=FALSE}
 knitr::kable(result)
+```
+
+# Bearings 
+
+In this section we focus on the **bearing**, for which we have a bigger sample. As before we have a  uniform distribution. We show below the distribution with a window of twenty days, we have a range from one to three hundred and twenty days.
+
+In the follwing table we can notice that the mode is about 100 days, which is low. 
+
+```{r bearings_calc, echo=FALSE}
+all_bearing <- one_material %>% dplyr::filter( stringr::str_detect(simplified_failure_mode, "Bearing"))
+# bin twnenty 
+table_20<-table(cut(as.numeric(attributes(table(all_bearing$day_bet_failure))$dimnames[[1]]), seq(0,350, 20)))
+
+knitr::kable(table_20)
 ```
 
