@@ -165,7 +165,7 @@ knitr::kable(result)
 
 In this section we focus on the **bearing**, for which we have a bigger sample. As before we have a  uniform distribution. We show below the distribution with a window of twenty days, we have a range from one to three hundred and twenty days.
 
-In the following table we can notice that the mode is about 100 days, which is low. 
+In the following table we can notice that the mode is about 100 days and a second period at about 200 days. In both case the period is small less than a year, for the 100 days we shall check the type the cause of the replacement. 
 
 ```{r bearings_calc, echo=FALSE}
 all_bearing <- one_material %>% dplyr::filter( stringr::str_detect(simplified_failure_mode, "Bearing"))
@@ -174,4 +174,26 @@ table_20<-table(cut(as.numeric(attributes(table(all_bearing$day_bet_failure))$di
 
 knitr::kable(table_20)
 ```
+The data set is the following, we can see that this sample if over four years, thefeore we must have some replacemnts already in this sample. 
 
+```{r dsp_bearing, echo=FALSE}
+skimr::skim(all_bearing %>% dplyr::select( day_bet_failure, scheduled_start ))
+
+```
+
+## Analsyis of the 100 days
+
+We have five bearing in the period 80 to 120 days, based on this little sample we have *race bearing defect* as a recurring cause
+
+```{r 100_days_analysis, echo=FALSE}
+bearing_100 <- all_bearing %>%
+                    dplyr::filter(day_bet_failure > 80 & day_bet_failure < 120 )
+
+knitr::kable( bearing_100$failure_mode)
+
+all_race  <- all_bearing %>% 
+                     dplyr::filter( stringr::str_detect(failure_mode, "race"))
+```
+
+
+Out of all the bearing failure we have ```r nrow(all_race)``` with race problem or one quater of the failure encounter with bearing.  
