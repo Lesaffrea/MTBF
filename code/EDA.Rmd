@@ -165,7 +165,7 @@ knitr::kable(result)
 
 In this section we focus on the **bearing**, for which we have a bigger sample. As before we have a  uniform distribution. We show below the distribution with a window of twenty days, we have a range from one to three hundred and twenty days.
 
-In the follwing table we can notice that the mode is about 100 days, which is low. 
+In the following table we can notice that the mode is about 100 days, which is low. 
 
 ```{r bearings_calc, echo=FALSE}
 all_bearing <- one_material %>% dplyr::filter( stringr::str_detect(simplified_failure_mode, "Bearing"))
