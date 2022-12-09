@@ -95,11 +95,13 @@ ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 
 # Boostrap 
 
-We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**, the bootstrap is dome with 500 samples, in this case we can wonder about the zero occurrence in the rginal data set. We build the sample in this way:
+We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**, the bootstrap is done with 500 samples, in this case we can wonder about the zero occurrence in the original data set. We can notice that the shape of the **bootstrap** is different from the original. 
 
-1. Build a matrix with the number of days between failures as values
+We build the sample in this way:
 
-2. Do a bootstrap using sample with replacement with 500 samples 
+1. Build a matrix with the number of days between failures as values.
+
+2. Do a bootstrap using sample with replacement with 500 samples. 
 
 ```{r bootlagging, echo=FALSE}
 all_lagging <- one_material %>%
@@ -155,11 +157,19 @@ result <-result %>%
 |--------------|--------|
 |  Number samples original | ```r nrow(all_lagging)``` |
 
-After bootstrap for hundred samples, with zero excluded. We come to a uniform distribution as the seed was uniform. We come to similar samples as before. This method could be used to build a prior if we use Bayes type of statistics. 
+After bootstrap for hundred samples, with zero excluded. We come to a nearly uniform distribution as the seed was uniform. We come to similar samples as before.We calculate the distance between the **Bootstrap** and the original and we have about .1 distance. This method could be used to build a prior if we use Bayes type of statistics. 
 
 ```{r boostrap_small, echo=FALSE}
+results_tst <- result %>% 
+                      dplyr::mutate( normalized= total / sum(total),
+                                     scaled = normalized * nrow(result))
+distance_boot <- sqrt(sum((results_tst$scaled-1)^2))
+
 knitr::kable(result)
 ```
+
+Distance of **bootstrap** sample with original ```r round(distance_boot,4)```.
+
 
 # Bearings 
 
