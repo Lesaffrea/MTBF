@@ -38,7 +38,9 @@ In this document, we explore the **MTBF** based on a data set from **Rio**. The 
  |  1/6 others                    |
  
  
- One point, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearli impossible. 
+ Before to go further the definition of the MTBF is worst to mentioned, it is the number of failures to repair in a period of time, it is an arithmetic mean, so nothing to do with distribution as mentioned in this document.  Its meaning is therefore restricted. 
+ 
+ One point, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearly impossible. 
  
 In the second stage, we test small sample and check if we can build synthetic data set out of small sample.
 
@@ -92,6 +94,28 @@ dsp_lagging <- one_material %>%
 
 ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 ```
+
+We show the bearing failure with different view, this distribution is close to poisson, which could be approximated. The main question is how can we build a point estimate that is MTBF out of such a sample?
+
+```{r dsp_points, echo=FALSE}
+hist(as.numeric(one_material$day_bet_failure), 
+     col="lightblue", 
+     xlab= "Number days",
+     main="Floc 3021BRC501C503ELEM.PULL.TAPU") 
+```
+```{r dsp_Exp, echo=FALSE}
+fact <- function( no ) {
+# check if no negative, zero or one then return 1
+if( no <= 1) {
+    return(1)
+  } else {
+    return(no * fact(no-1))
+  }
+}
+
+```
+
+
 
 # Boostrap 
 
@@ -175,7 +199,7 @@ Distance of **bootstrap** sample with original ```r round(distance_boot,4)```.
 
 In this section we focus on the **bearing**, for which we have a bigger sample. As before we have a  uniform distribution. We show below the distribution with a window of twenty days, we have a range from one to three hundred and twenty days.
 
-In the following table we can notice that the mode is about 100 days and a second period at about 200 days. In both case the period is small less than a year, for the 100 days we shall check the type the cause of the replacement. 
+In the following table we can notice we work with intermittent tome series,  the mode is about 100 days and a second period at about 200 days. In both case the period is small less than a year, for the 100 days we shall check the type the cause of the replacement. 
 
 ```{r bearings_calc, echo=FALSE}
 all_bearing <- one_material %>% dplyr::filter( stringr::str_detect(simplified_failure_mode, "Bearing"))
@@ -184,7 +208,7 @@ table_20<-table(cut(as.numeric(attributes(table(all_bearing$day_bet_failure))$di
 
 knitr::kable(table_20)
 ```
-The data set is the following, we can see that this sample if over four years, thefeore we must have some replacemnts already in this sample. 
+The data set is the following, we can see that this sample is over four years, therefore we must have some replacements already in this sample. 
 
 ```{r dsp_bearing, echo=FALSE}
 skimr::skim(all_bearing %>% dplyr::select( day_bet_failure, scheduled_start ))
