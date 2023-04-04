@@ -14,7 +14,9 @@ library(ggplot2)
 library(ggeffects)
 library(ggpubr)
 library(janitor)
+library(boot)
 library(bootstrap)
+library(WVPlots)
 output_data <-read.csv(stringr::str_c(here::here(),"/data/output.table.csv"), sep=",", skipNul = TRUE,fileEncoding="latin1" )
 output_data  <-clean_names(output_data) %>%
                       dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y"))
@@ -38,7 +40,7 @@ In this document, we explore the **MTBF** based on a data set from **Rio**. The 
  |  1/6 others                    |
  
  
- Before to go further the definition of the MTBF is worst to mentioned, it is the number of failures to repair in a period of time, it is an arithmetic mean, so nothing to do with distribution as mentioned in this document.  Its meaning is therefore restricted. 
+ Before to go further the definition of the MTBF is worst to mentioned, it is the number of failures to repair in a period of time, it is an arithmetic mean, so nothing to do with distribution as mentioned in this document.  Its meaning is therefore restricted as we show below the difference between the distribution calculation and the MTBF is important. 
  
  One point, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearly impossible. 
  
@@ -95,14 +97,29 @@ dsp_lagging <- one_material %>%
 ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 ```
 
-We show the bearing failure with different view, this distribution is close to poisson, which could be approximated. The main question is how can we build a point estimate that is MTBF out of such a sample?
+We show the bearing failure with different view, this distribution is close to poisson, which could be approximated. We have ``r sum(one_material$day_bet_failure == 0)``` samples with zero duration in this case, it represented 17% of the samples. 
+
 
 ```{r dsp_points, echo=FALSE}
 hist(as.numeric(one_material$day_bet_failure), 
      col="lightblue", 
      xlab= "Number days",
      main="Floc 3021BRC501C503ELEM.PULL.TAPU") 
+
+non_zero_failure = one_material$day_bet_failure[as.numeric(one_material$day_bet_failure) !=0]
 ```
+
+The non zero distribution is as follow, 
+
+```{r dsp_non_zaro, echo=FALSE}
+hist(as.numeric(non_zero_failure), 
+     col="lightblue", 
+     xlab= "Number days",
+     main="Floc 3021BRC501C503ELEM.PULL.TAPU") 
+```
+
+In the next lines we do bootstrap on the number of days, which will give us the confidence interval, which is this case is pretty wide but normally distributed as expected. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population, in this case the mean will be of 127 instead of 133 for the subset.  
+
 ```{r dsp_Exp, echo=FALSE}
 fact <- function( no ) {
 # check if no negative, zero or one then return 1
@@ -113,9 +130,22 @@ if( no <= 1) {
   }
 }
 
+mean_time <- function(df,i){
+  df <-df[i,]
+  no_zero <-df$day_bet_failure[as.numeric(df$day_bet_failure) !=0]
+  return( mean(no_zero) )
+}
+
+set.seed(89787)
+one_material <- one_material[-1,]
+boot_mean <-boot(one_material, mean_time, R= 1000)
+boot_mean$t <-as.data.frame(boot_mean$t)
+names(boot_mean$t) <-"mean"
+PlotDistDensityNormal(boot_mean$t, 'mean', "Distribution mean boot") +
+  theme_minimal()
 ```
 
-
+If we do calculate the original MTBF we have a value of ```r ((one_material$scheduled_start[37] - one_material$scheduled_start[1])/ nrow(one_material))[1]```. We have a difference if we take the distribution rather than the arithmetic mean. 
 
 # Boostrap 
 
@@ -159,6 +189,7 @@ n <-length(unique(all_lagging$day_bet_failure))
 theta <-function(x,df){ df$value[x]}
 nb_sample <-100
 bootsample <-bootstrap(1:n, nb_sample, theta, all_lagging_df)
+
 result <-data.frame()
 for( index in 1:nb_sample){
   tmp <-as.data.frame.table(table(bootsample$thetastar[,index]))
