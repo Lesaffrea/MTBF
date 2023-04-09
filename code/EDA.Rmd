@@ -10,16 +10,21 @@ output:
 ```{r init, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dplyr)
-library(ggplot2)
-library(ggeffects)
-library(ggpubr)
 library(janitor)
 library(boot)
 library(bootstrap)
+library(modeest)
+library(ggplot2)
+library(ggeffects)
+library(ggpubr)
 library(WVPlots)
+library(ggridges)
+library(hrbrthemes)
+library(gridExtra)
 output_data <-read.csv(stringr::str_c(here::here(),"/data/output.table.csv"), sep=",", skipNul = TRUE,fileEncoding="latin1" )
 output_data  <-clean_names(output_data) %>%
-                      dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y"))
+                      dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y")) %>%
+                      dplyr::filter( order_type == "PM01")
 output_data   <-output_data %>%
                       dplyr::filter( !row_number() %in% which(duplicated(output_data)))
 
@@ -28,7 +33,9 @@ output_data   <-output_data %>%
 
 ## Summary
 
-In this document, we explore the **MTBF** based on a data set from **Rio**. The main aim was about how to calculate the **MTBF**, which could be valid. To build this document, the **SKF** document **Bearing damage and failure analysis** has been  used. 
+In this document, we explore the **MTBF** based on a data set from **Rio**. The main aim was about how to calculate the **MTBF**, which could be valid, that do we take the standard formula $$\frac{delta \space time}{number \space incidents}$$ or do we calculate a distribution of independent per days, the difference is significant in our case from about 20 days to 40 days, we calculate the CI as well which is small, it means the MTBF under rate the number of days between failure.
+
+To build this document, the **SKF** document **Bearing damage and failure analysis** has been  used. 
 
  For information the bearings failures, which are exceptional as most bearings live longer that the device they are associated with. 
  
@@ -41,6 +48,8 @@ In this document, we explore the **MTBF** based on a data set from **Rio**. The 
  
  
  Before to go further the definition of the MTBF is worst to mentioned, it is the number of failures to repair in a period of time, it is an arithmetic mean, so nothing to do with distribution as mentioned in this document.  Its meaning is therefore restricted as we show below the difference between the distribution calculation and the MTBF is important. 
+ 
+ We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are multomodal, the MTBF is taken as the lowest model of the distribution. 
  
  One point, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearly impossible. 
  
@@ -118,7 +127,7 @@ hist(as.numeric(non_zero_failure),
      main="Floc 3021BRC501C503ELEM.PULL.TAPU") 
 ```
 
-In the next lines we do bootstrap on the number of days, which will give us the confidence interval, which is this case is pretty wide but normally distributed as expected. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population, in this case the mean will be of 127 instead of 133 for the subset.  
+In the next lines we do bootstrap on the number of days, we should not have a lot of difference with the orignal data as we have ```r nrow(one_material)``` samples. We calculate the confidence interval on the boostrap as we have a normal distribution in this case. The CI is pretty small. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population. In this case the mean will be of 134 instead of 133 for the subset.  
 
 ```{r dsp_Exp, echo=FALSE}
 fact <- function( no ) {
@@ -143,13 +152,77 @@ boot_mean$t <-as.data.frame(boot_mean$t)
 names(boot_mean$t) <-"mean"
 PlotDistDensityNormal(boot_mean$t, 'mean', "Distribution mean boot") +
   theme_minimal()
+mtbf<-round(((one_material$scheduled_start[19] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)
+delta_mtbf_dist <-mean(boot_mean$t$mean) -mtbf
 ```
 
-If we do calculate the original MTBF we have a value of ```r ((one_material$scheduled_start[37] - one_material$scheduled_start[1])/ nrow(one_material))[1]```. We have a difference if we take the distribution rather than the arithmetic mean. 
+If we do calculate the original MTBF we have a value of ```r round(((one_material$scheduled_start[29] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has ne greatv. values as we are multimodal. 
 
-# Boostrap 
+The margin of error for the bootstrap mean is small and less than 1, to be exact ```r (sd(boot_mean$t$mean)/sqrt(1000))*1.96``` for 95% or Z score at 1.96. This CI bring us in the range of the sample which is close to the population it seems. 
 
-We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of of devices **mtbf**, the bootstrap is done with 500 samples, in this case we can wonder about the zero occurrence in the original data set. We can notice that the shape of the **bootstrap** is different from the original. 
+# Other functional location 
+
+In th previous paragraph we use one functional location, in this section we use **3074REC1PCONVELEM .BELT**, in this function location we have more than 50 failures. I=n this case we deal only with pulley.
+
+```{r functional, echo=FALSE}
+functional_3074 <-output_data |> dplyr::filter( functional_location == "3074REC1PCONVELEM .BELT") |>
+                                 dplyr::filter( stringr::str_length(material_description) > 0) |>
+                                 # dplyr::mutate( material_description = factor(material_description)) |>
+                                 dplyr::group_by(material_description) |>
+                                 dplyr::arrange(scheduled_start )  |>
+                                 dplyr::mutate( day_bet_failure = scheduled_start- lag(scheduled_start)) |>
+                                 dplyr::mutate( day_bet_failure  = ifelse( is.na(day_bet_failure),0, day_bet_failure))
+functional_3074 <- functional_3074 |> 
+                                dplyr::arrange( material_description, by_group = TRUE) |>
+                                dplyr::filter( day_bet_failure > 0)
+```
+
+The first pulleys description is as below, we can see that we deal with multiple pulleys *(Four)*, which make the analysis interesting and the time between faulre could be long, taking all the pulley we have a bimodal distribution.  
+
+```{r pulley_dec, echo=FALSE}
+knitr::kable(functional_3074$material_description[1])
+```
+
+We show the time between failure for the four pulleys, we can notice that some failures are close to each other. We make the assumption that it is not a planned maintenance, what is surpring is the no failure between 200 and 300 days. 
+
+```{r dsp_pulley_graph, echo=FALSE, message=FALSE}
+dsp_point <-ggplot( data = functional_3074, aes(x= scheduled_start, y= day_bet_failure, group= material_description, color= material_description)) +
+        geom_point( ) +
+        geom_jitter() +
+        theme_ipsum() 
+
+dsp_density <- ggplot( data = functional_3074, aes(x= day_bet_failure, y= material_description,  color= material_description, fill= material_description)) +
+  geom_density_ridges() +
+  theme_ridges() + 
+  theme(legend.position = "none")
+        
+grid.arrange(dsp_point, dsp_density, 
+             ncol = 1, nrow = 2)
+
+# we calculate the mode, the datset is lareday group by matterail_description 
+mode_functional_3074 <- functional_3074 |>
+                                dplyr::summarise( mode = list(mlv(day_bet_failure, method = "meanshift")),
+                                                  mtbf = sum(day_bet_failure)/ n())
+
+
+```
+
+If we use the MTBF formula which is challenging as we have period longer than a year. we have 2,75 failues per year. To build the distribution we have to consider the bimodal distribution, knowing that we have lower probability at 350 days. 
+
+If we take the mode of distribution as the inspection time we have the following values, we can notice that the MTBF is higher than the mode MTBF, with 40 days diffrences, this could be an issue if we want to avoid the failure. 
+
+| Material  |  Distribution MTBF |  MTBF |
+|-----------|--------------------|-------|
+| ```r mode_functional_3074$$material_description[1]``` | ```r mode_functional_3074$mode[[1]][1]``` | ```r `mode_functional_3074$mtbf[1] ```|
+| ```r mode_functional_3074$$material_description[2]``` | ```r mode_functional_3074$mode[[2]][1]``` | ```r `mode_functional_3074$mtbf[2] ```|
+| ```r mode_functional_3074$$material_description[3]``` | ```r mode_functional_3074$mode[[3]][1]``` | ```r `mode_functional_3074$mtbf[3] ```|
+| ```r mode_functional_3074$$material_description[4]``` | ```r mode_functional_3074$mode[[4]][1]``` | ```r `mode_functional_3074$mtbf[4] ```|
+
+
+
+# Seond Boostrap 
+
+We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of devices **mtbf**, the bootstrap is done with 500 samples, in this case we can wonder about the zero occurrence in the original data set. We can notice that the shape of the **bootstrap** is different from the original. 
 
 We build the sample in this way:
 
@@ -173,7 +246,7 @@ all_bearing <- one_material %>% dplyr::filter( stringr::str_detect(simplified_fa
 ```
 
 
-We do the same bu we remove the zero day between failure from the data set. The lagging type has very few samples as shown below. 
+We do the same but we remove the zero day between failure from the data set. The lagging type has very few samples as shown below. 
 
 
 ```{r bootlagging_2, echo=FALSE}
@@ -187,7 +260,7 @@ all_lagging_df$values <-rownames(all_lagging_df)
 set.seed(123)
 n <-length(unique(all_lagging$day_bet_failure))
 theta <-function(x,df){ df$value[x]}
-nb_sample <-100
+nb_sample <-1000
 bootsample <-bootstrap(1:n, nb_sample, theta, all_lagging_df)
 
 result <-data.frame()
@@ -212,7 +285,7 @@ result <-result %>%
 |--------------|--------|
 |  Number samples original | ```r nrow(all_lagging)``` |
 
-After bootstrap for hundred samples, with zero excluded. We come to a nearly uniform distribution as the seed was uniform. We come to similar samples as before.We calculate the distance between the **Bootstrap** and the original and we have about .1 distance. This method could be used to build a prior if we use Bayes type of statistics. 
+After bootstrap for thousand samples, with zero excluded. We come to a nearly uniform distribution as the seed was uniform. We come to similar samples as before. We calculate the distance between the **Bootstrap** and the original and we have about .1 distance. This method could be used to build a prior if we use Bayes type of statistics. 
 
 ```{r boostrap_small, echo=FALSE}
 results_tst <- result %>% 
