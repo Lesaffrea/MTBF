@@ -209,14 +209,14 @@ mode_functional_3074 <- functional_3074 |>
 
 If we use the MTBF formula which is challenging as we have period longer than a year. we have 2,75 failues per year. To build the distribution we have to consider the bimodal distribution, knowing that we have lower probability at 350 days. 
 
-If we take the mode of distribution as the inspection time we have the following values, we can notice that the MTBF is higher than the mode MTBF, with 40 days diffrences, this could be an issue if we want to avoid the failure. 
+If we take the mode of distribution as the inspection time we have the following values, we can notice that the MTBF is higher than the mode MTBF, with 40 days difference, this could be an issue if we want to avoid the failure. 
 
 | Material  |  Distribution MTBF |  MTBF |
 |-----------|--------------------|-------|
-| ```r mode_functional_3074$material_description[1]``` | ```r mode_functional_3074$mode[[1]][1]``` | ```r mode_functional_3074$mtbf[1] ```|
-| ```r mode_functional_3074$material_description[2]``` | ```r mode_functional_3074$mode[[2]][1]``` | ```r mode_functional_3074$mtbf[2] ```|
-| ```r mode_functional_3074$material_description[3]``` | ```r mode_functional_3074$mode[[3]][1]``` | ```r mode_functional_3074$mtbf[3] ```|
-| ```r mode_functional_3074$material_description[4]``` | ```r mode_functional_3074$mode[[4]][1]``` | ```r mode_functional_3074$mtbf[4] ```|
+| ```r mode_functional_3074$material_description[1]``` | ```r round(mode_functional_3074$mode[[1]][1],2)``` | ```r round(mode_functional_3074$mtbf[1],2) ```|
+| ```r mode_functional_3074$material_description[2]``` | ```r round(mode_functional_3074$mode[[2]][1],2)``` | ```r round(mode_functional_3074$mtbf[2],2) ```|
+| ```r mode_functional_3074$material_description[3]``` | ```r round(mode_functional_3074$mode[[3]][1],2)``` | ```r round(mode_functional_3074$mtbf[3],2) ```|
+| ```r mode_functional_3074$material_description[4]``` | ```r round(mode_functional_3074$mode[[4]][1],2) ``` | ```r round(mode_functional_3074$mtbf[4],2) ```|
 
 
 
