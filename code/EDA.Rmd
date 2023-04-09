@@ -51,7 +51,7 @@ To build this document, the **SKF** document **Bearing damage and failure analys
  
  We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are multomodal, the MTBF is taken as the lowest model of the distribution. 
  
- One point, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearly impossible. 
+ *One point**, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearly impossible. 
  
 In the second stage, we test small sample and check if we can build synthetic data set out of small sample.
 
@@ -156,7 +156,7 @@ mtbf<-round(((one_material$scheduled_start[19] - one_material$scheduled_start[1]
 delta_mtbf_dist <-mean(boot_mean$t$mean) -mtbf
 ```
 
-If we do calculate the original MTBF we have a value of ```r round(((one_material$scheduled_start[29] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has ne greatv. values as we are multimodal. 
+If we do calculate the original MTBF we have a value of ```r round(((one_material$scheduled_start[19] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has ne greatv. values as we are multimodal. 
 
 The margin of error for the bootstrap mean is small and less than 1, to be exact ```r (sd(boot_mean$t$mean)/sqrt(1000))*1.96``` for 95% or Z score at 1.96. This CI bring us in the range of the sample which is close to the population it seems. 
 
@@ -213,10 +213,10 @@ If we take the mode of distribution as the inspection time we have the following
 
 | Material  |  Distribution MTBF |  MTBF |
 |-----------|--------------------|-------|
-| ```r mode_functional_3074$$material_description[1]``` | ```r mode_functional_3074$mode[[1]][1]``` | ```r `mode_functional_3074$mtbf[1] ```|
-| ```r mode_functional_3074$$material_description[2]``` | ```r mode_functional_3074$mode[[2]][1]``` | ```r `mode_functional_3074$mtbf[2] ```|
-| ```r mode_functional_3074$$material_description[3]``` | ```r mode_functional_3074$mode[[3]][1]``` | ```r `mode_functional_3074$mtbf[3] ```|
-| ```r mode_functional_3074$$material_description[4]``` | ```r mode_functional_3074$mode[[4]][1]``` | ```r `mode_functional_3074$mtbf[4] ```|
+| ```r mode_functional_3074$material_description[1]``` | ```r mode_functional_3074$mode[[1]][1]``` | ```r mode_functional_3074$mtbf[1] ```|
+| ```r mode_functional_3074$material_description[2]``` | ```r mode_functional_3074$mode[[2]][1]``` | ```r mode_functional_3074$mtbf[2] ```|
+| ```r mode_functional_3074$material_description[3]``` | ```r mode_functional_3074$mode[[3]][1]``` | ```r mode_functional_3074$mtbf[3] ```|
+| ```r mode_functional_3074$material_description[4]``` | ```r mode_functional_3074$mode[[4]][1]``` | ```r mode_functional_3074$mtbf[4] ```|
 
 
 
