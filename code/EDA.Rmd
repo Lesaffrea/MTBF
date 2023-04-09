@@ -71,7 +71,6 @@ knitr::kable(process_data[1:15,])
 
 one_material <- output_data %>%
                     dplyr::filter( functional_location =="3021BRC501C503ELEM.PULL.TAPU") %>%
-                    dplyr::select(-material_description) %>%
                     dplyr::distinct() %>%
                     dplyr::arrange(scheduled_start )  %>%
                     dplyr::mutate( day_bet_failure = scheduled_start- lag(scheduled_start)) 
@@ -156,9 +155,39 @@ mtbf<-round(((one_material$scheduled_start[19] - one_material$scheduled_start[1]
 delta_mtbf_dist <-mean(boot_mean$t$mean) -mtbf
 ```
 
-If we do calculate the original MTBF we have a value of ```r round(((one_material$scheduled_start[19] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has ne greatv. values as we are multimodal. 
+If we do calculate the original MTBF for  the functional location we have a value of ```r round(((one_material$scheduled_start[19] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has ne greatv. values as we are multimodal. 
 
 The margin of error for the bootstrap mean is small and less than 1, to be exact ```r (sd(boot_mean$t$mean)/sqrt(1000))*1.96``` for 95% or Z score at 1.96. This CI bring us in the range of the sample which is close to the population it seems. 
+
+## Checking by material 
+
+The following visual shows the distribution of time between failaure, we can notice the first modes are similar. The material 07187 has a long time betwwen failure at the extrem, using the calculated MTBF will therefore have a values lot higher that the first mode. 
+
+```{r metrail_mtbf, echo=FALSE, message=FALSE}
+functional_3016 <- one_material |>
+                        dplyr::group_by( material_description ) |>
+                        dplyr::arrange(scheduled_start )  |>
+                        dplyr::mutate( day_bet_failure  = ifelse( is.na(day_bet_failure),0, day_bet_failure)) |>
+                        dplyr::filter( day_bet_failure > 0) |>
+                        dplyr::arrange( material_description, by_group = TRUE) 
+
+
+mode_functional_3016 <- functional_3016 |>
+                                dplyr::summarise( mode = list(mlv(day_bet_failure, method = "meanshift")),
+                                                  mtbf = sum(day_bet_failure)/ n())
+
+ggplot( data = functional_3016, aes(x= day_bet_failure, y= material_description,  color= material_description, fill= material_description)) +
+  geom_density_ridges() +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
+
+As we can see with the second material the diffrence between MTBF and mode is large, too large. 
+
+| Material  |  Distribution MTBF |  MTBF |
+|-----------|--------------------|-------|
+| ```r mode_functional_3016$material_description[1]``` | ```r round(mode_functional_3016$mode[[1]][1],2)``` | ```r round(mode_functional_3016$mtbf[1],2) ```|
+| ```r mode_functional_3016$material_description[2]``` | ```r round(mode_functional_3016$mode[[2]][1],2)``` | ```r round(mode_functional_3016$mtbf[2],2) ```|
 
 # Other functional location 
 
