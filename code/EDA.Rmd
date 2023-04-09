@@ -21,6 +21,7 @@ library(WVPlots)
 library(ggridges)
 library(hrbrthemes)
 library(gridExtra)
+source('./ReliabilitySupportFns.R')
 output_data <-read.csv(stringr::str_c(here::here(),"/data/output.table.csv"), sep=",", skipNul = TRUE,fileEncoding="latin1" )
 output_data  <-clean_names(output_data) %>%
                       dplyr::mutate( scheduled_start = lubridate::as_date(scheduled_start, format="%d/%m/%Y")) %>%
@@ -126,7 +127,7 @@ hist(as.numeric(non_zero_failure),
      main="Floc 3021BRC501C503ELEM.PULL.TAPU") 
 ```
 
-In the next lines we do bootstrap on the number of days, we should not have a lot of difference with the orignal data as we have ```r nrow(one_material)``` samples. We calculate the confidence interval on the boostrap as we have a normal distribution in this case. The CI is pretty small. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population. In this case the mean will be of 134 instead of 133 for the subset.  
+In the next lines we do a bootstrap on the number of days, we should not have a lot of difference with the orignal data as we have ```r nrow(one_material)``` samples. We calculate the confidence interval on the boostrap as we have a normal distribution in this case. The CI is pretty small. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population. In this case the mean will be of 134 instead of 133 for the subset, which is closer to the mode as shown below. 
 
 ```{r dsp_Exp, echo=FALSE}
 fact <- function( no ) {
@@ -180,14 +181,31 @@ ggplot( data = functional_3016, aes(x= day_bet_failure, y= material_description,
   geom_density_ridges() +
   theme_ridges() + 
   theme(legend.position = "none")
+
+tmp_observe.dat <- functional_3016 |> 
+                        dplyr::rename( time= day_bet_failure) |> 
+                        dplyr::mutate(event =1) |> 
+                        dplyr::ungroup() |>
+                        dplyr::select( event, time) |>
+                        dplyr::mutate( time =as.integer(time))
 ```
 
-As we can see with the second material the diffrence between MTBF and mode is large, too large. 
+For both material the time to failure is as follow, the break for high time between failure here, raise few questions such as censoring or the materail used has changed for this material description. 
+
+```{r dsptime, echo=FALSE}
+Plot.Observations(tmp_observe.dat)
+```
+
+
+
+As we can see with the second material the difference between MTBF and mode is large, too large. 
 
 | Material  |  Distribution MTBF |  MTBF |
 |-----------|--------------------|-------|
 | ```r mode_functional_3016$material_description[1]``` | ```r round(mode_functional_3016$mode[[1]][1],2)``` | ```r round(mode_functional_3016$mtbf[1],2) ```|
 | ```r mode_functional_3016$material_description[2]``` | ```r round(mode_functional_3016$mode[[2]][1],2)``` | ```r round(mode_functional_3016$mtbf[2],2) ```|
+
+In case of the first material, we could cenored the extrem, and then do a calculation with Weibull, which will give us the reliability that we can transform in MTBF. 
 
 # Other functional location 
 
