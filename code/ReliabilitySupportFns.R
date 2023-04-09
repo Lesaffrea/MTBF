@@ -126,13 +126,14 @@ Reliability.plot.w2p <- function(beta,eta,time,line.colour,nincr=500){
 
 Plot.Observations <- function(reliability.data,Ntotal=-999){
   # Specify Ntotal if plotting a subset of the data.
-  dat &lt <- reliability.data
+  dat <- reliability.data
 
-  fail &lt<- sort(dat[dat$event==1,"time"])
+  fail <- dat |>
+           dplyr::arrange( time)
   # i.e., if there are censored observations:
   if(sum(dat$event)  != nrow(dat)){
     cens <- sort(dat[dat$event==0,"time"])
-    dat2 <- data.frame(fail=fail,cens=NA)
+    dat2    <- data.frame(fail=fail,cens=NA)
     fail.df <- data.frame(fail=NA,cens=cens)
     dat2 <- rbind(dat2,fail.df)
     time.index <- apply(dat2,1,sum,na.rm=T)
@@ -151,20 +152,23 @@ Plot.Observations <- function(reliability.data,Ntotal=-999){
          labels=rev(seq(Start.y,N.dataset,by=5)),
          las=1,adj=0.5,cex.axis=0.85)
   } else{
-    barplot(t(as.matrix(fail[length(fail):1])),col="black",
+    length_df <-nrow(fail)
+    barplot(t(as.matrix(fail[length_df:1,2])),
             horiz=T,border=NA,
-            xlab="time")
-    plot.dat <- barplot(t(as.matrix(fail[length(fail):1])),
+            xlab="time",
+            col="blue")
+    plot.dat <- barplot(t(as.matrix(fail[length_df:1,2])),
                         horiz=T,border=NA,plot=F)
-    Difference <- abs(length(fail)-max(c(seq(1,length(fail),by=5))))
-    axis(2,at=plot.dat[seq(1,length(fail),by=5)] + ceiling(plot.dat[2,Difference]),
-         labels=rev(seq(1,length(fail),by=5)),
+
+    Difference <- abs(length_df -max(c(seq(1,length_df,by=5))))
+    axis(2,at=plot.dat[seq(1,length_df ,by=5)],    # + ceiling(plot.dat[2,Difference] )
+         labels=rev(seq(1,length_df,by=5)),
          las=1,adj=0.5,cex.axis=0.85)
   }
   legend("topright",
          legend=c("Failure","Suspension"),
          pch=15,
-         col=c("black","red"),
+         col=c("blue","red"),
          bty='n',
          horiz=F,xpd=NA,pt.cex=1.5)
   mtext("Time-ranked observation",side=2,line=2.5,adj=0.5)
@@ -236,7 +240,11 @@ Calculate.e_val <- function(ab.obj){
                     "cl_0.95"])
   return(e_val)
 }
-
+#
+#
+#
+#
+#
 Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   print(c("Adjustments to 95 % simultaneous confidence bounds to account for"))
   print(c("non-increasing values follow method of Meeker &amp; Escobar (1998)"))
@@ -263,7 +271,8 @@ Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   dat3$se.summation <- dat3$pj / (dat3$nj*(1-dat3$pj))
   sum.term <- cumsum(dat3$se.summation)
   attach(dat3)
-  dat3$se <- sqrt( (Shat)^2 * sum.term )
+  # Change to dat2$Shat ni=ot Shat
+  dat3$se <- sqrt( (dat2$Shat)^2 * sum.term )
   detach(dat3)
   dat3$w <- exp((e_val*dat3$se) / (dat3$Fhat*(1-dat3$Fhat)))
   attach(dat3)
@@ -271,6 +280,7 @@ Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   dat3$hiUnadj <- Fhat / (Fhat + (1-Fhat)/w)
   detach(dat3)
   dat4 <- dat3[is.nan(dat3$se)==F,]
+  browser()
   lo.NonDecreasing <- ifelse(sum(diff(dat4$loUnadj) < 0)==0,"No","Yes")
   hi.NonDecreasing <- ifelse(sum(diff(dat4$hiUnadj)  < 0)==0,"No","Yes")
   if(lo.NonDecreasing=="Yes"){
