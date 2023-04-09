@@ -162,7 +162,7 @@ The margin of error for the bootstrap mean is small and less than 1, to be exact
 
 # Other functional location 
 
-In th previous paragraph we use one functional location, in this section we use **3074REC1PCONVELEM .BELT**, in this function location we have more than 50 failures. I=n this case we deal only with pulley.
+In th previous paragraph we use one functional location, in this section we use **3074REC1PCONVELEM .BELT**, in this function location we have more than 50 failures. In this case we deal only with pulley.
 
 ```{r functional, echo=FALSE}
 functional_3074 <-output_data |> dplyr::filter( functional_location == "3074REC1PCONVELEM .BELT") |>
