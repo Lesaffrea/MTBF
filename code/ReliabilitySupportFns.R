@@ -5,8 +5,8 @@
 
 # Calculate probability of failure:
 
-Calc.Unreliability.w2p &lt;- function(beta,eta,time){
-  Unreliability &lt;- (1-exp(-((time/eta)^beta)))
+Calc.Unreliability.w2p <- function(beta,eta,time){
+  Unreliability <- (1-exp(-((time/eta)^beta)))
   return(Unreliability)
 }
 
@@ -14,7 +14,7 @@ Calc.Unreliability.w2p &lt;- function(beta,eta,time){
 
 # Calculate warranty time for target reliability:
 
-Calc.Warranty.w2p &lt;- function(beta,eta,Rval){
+Calc.Warranty.w2p <- function(beta,eta,Rval){
   time=eta*((-log(Rval))^(1/beta))
   return(time)
 }
@@ -23,11 +23,11 @@ Calc.Warranty.w2p &lt;- function(beta,eta,Rval){
 
 # NormalDist.rrx method:
 
-xmax &lt;- function(x){
+xmax <- function(x){
   # this function gets upper limit to x axis for the plot
   # to replicate the Weibull++ plot format.
   # x is the max of x
-  x.max &lt;- ceiling(x/(10^(nchar(as.character(x))-1))) *
+  x.max <- ceiling(x/(10^(nchar(as.character(x))-1))) *
                   (10^(nchar(as.character(x))-1))
   return(x.max)
 }
@@ -36,19 +36,19 @@ xmax &lt;- function(x){
 
 # Extract Expectation and variance from Weibull distribution:
 
-Weibull.2p.Expectation &lt;- function(eta,beta){
+Weibull.2p.Expectation <- function(eta,beta){
   # In R, eta=scale and beta=shape parameters
   # of built-in functions.
-  Expectn &lt;- eta * gamma(1 + 1/beta)
+  Expectn <- eta * gamma(1 + 1/beta)
   return(Expectn)
 }
 
-Weibull.2p.Var &lt;- function(eta,beta){
+Weibull.2p.Var <- function(eta,beta){
   # In R, eta=scale and beta=shape parameters
   # of built-in functions.
-  b &lt;- eta
-  a &lt;- beta
-  Var.W2p &lt;- b^2* (gamma(1 + 2/a) - (gamma(1 + 1/a))^2)
+  b <- eta
+  a <- beta
+  Var.W2p <- b^2* (gamma(1 + 2/a) - (gamma(1 + 1/a))^2)
   return(Var.W2p)
 }
 
@@ -56,16 +56,16 @@ Weibull.2p.Var &lt;- function(eta,beta){
 
 # For constructing Weibull plots:
 
-F0inv    &lt;- function (p) log(qweibull(p, 1, 1))
+F0inv    <- function (p) log(qweibull(p, 1, 1))
 # This is a fancy way to give you the y axis scale by setting
 # shape and scale parameters to 1, p= median rank.
 
-Weibull.2p.plot &lt;- function(x,y){
+Weibull.2p.plot <- function(x,y){
   # x = time; y = median ranks.
-  ticks    &lt;- c(seq(0.01,0.09,0.01),(1:9)/10,seq(0.91,0.99,0.01))
-  xticks &lt;- round(exp(seq(0.1,log(xmax(max(x))),
+  ticks    <- c(seq(0.01,0.09,0.01),(1:9)/10,seq(0.91,0.99,0.01))
+  xticks <- round(exp(seq(0.1,log(xmax(max(x))),
                     length.out=5)),0)
-  y.trans &lt;- F0inv(y)
+  y.trans <- F0inv(y)
   plot(x,y.trans,xlim=c(exp(0.1),xmax(max(x))),
        ylim=F0inv(c(0.01,0.99)),log="x",axes=F)
   axis(1,at=xticks)
@@ -77,18 +77,18 @@ Weibull.2p.plot &lt;- function(x,y){
 
 # Produce failure rate plot: 2-parameter Weibull.
 
-failure.rate.w2p &lt;- function(beta,eta,time){
-  r &lt;- (beta/eta) *
+failure.rate.w2p <- function(beta,eta,time){
+  r <- (beta/eta) *
         (time/eta)^(beta-1)
   return(r)
 }
 
-hazard.plot.w2p &lt;- function(beta,eta,time,line.colour,nincr=500){
-  max.time &lt;- max(time,na.rm=F)
-  t &lt;- seq(0,max.time,length.out=nincr)
-  r &lt;- numeric(length(t))
+hazard.plot.w2p <- function(beta,eta,time,line.colour,nincr=500){
+  max.time <- max(time,na.rm=F)
+  t <- seq(0,max.time,length.out=nincr)
+  r <- numeric(length(t))
   for(i in 1:length(t)){
-    r[i] &lt;- failure.rate.w2p(beta,eta,t[i])
+    r[i] <- failure.rate.w2p(beta,eta,t[i])
   }
   plot(t,r,type='l',bty='l',
        col=line.colour,lwd=2,
@@ -102,17 +102,17 @@ hazard.plot.w2p &lt;- function(beta,eta,time,line.colour,nincr=500){
 
 # Produce Reliability plot.
 
-Reliability.w2p &lt;- function(beta,eta,time){
-  R &lt;- exp(-(time/eta)^beta)
+Reliability.w2p <- function(beta,eta,time){
+  R <- exp(-(time/eta)^beta)
   return(R)
 }
 
-Reliability.plot.w2p &lt;- function(beta,eta,time,line.colour,nincr=500){
-  max.time &lt;- max(time,na.rm=F)
-  t &lt;- seq(0,max.time,length.out=nincr)
-  R &lt;- numeric(length(t))
+Reliability.plot.w2p <- function(beta,eta,time,line.colour,nincr=500){
+  max.time <- max(time,na.rm=F)
+  t <- seq(0,max.time,length.out=nincr)
+  R <- numeric(length(t))
   for(i in 1:length(t)){
-    R[i] &lt;- Reliability.w2p(beta,eta,t[i])
+    R[i] <- Reliability.w2p(beta,eta,t[i])
   }
   plot(t,R,type='l',bty='l',
        col=line.colour,lwd=2,
@@ -124,29 +124,29 @@ Reliability.plot.w2p &lt;- function(beta,eta,time,line.colour,nincr=500){
 
 ####
 
-Plot.Observations &lt;- function(reliability.data,Ntotal=-999){
+Plot.Observations <- function(reliability.data,Ntotal=-999){
   # Specify Ntotal if plotting a subset of the data.
-  dat &lt;- reliability.data
+  dat &lt <- reliability.data
 
-  fail &lt;- sort(dat[dat$event==1,"time"])
+  fail &lt<- sort(dat[dat$event==1,"time"])
   # i.e., if there are censored observations:
-  if(sum(dat$event)&lt;nrow(dat)){
-    cens &lt;- sort(dat[dat$event==0,"time"])
-    dat2 &lt;- data.frame(fail=fail,cens=NA)
-    fail.df &lt;- data.frame(fail=NA,cens=cens)
-    dat2 &lt;- rbind(dat2,fail.df)
-    time.index &lt;- apply(dat2,1,sum,na.rm=T)
-    dat3 &lt;- dat2[order(time.index),]
+  if(sum(dat$event)  != nrow(dat)){
+    cens <- sort(dat[dat$event==0,"time"])
+    dat2 <- data.frame(fail=fail,cens=NA)
+    fail.df <- data.frame(fail=NA,cens=cens)
+    dat2 <- rbind(dat2,fail.df)
+    time.index <- apply(dat2,1,sum,na.rm=T)
+    dat3 <- dat2[order(time.index),]
     par(yaxt="n")
     barplot(t(as.matrix(dat3[nrow(dat3):1,])),
             beside=T,horiz=T,col=c("black","red"),border=NA,
             xlab="time") # as per Fig 1.5 in Meeker &amp; Escobar.
-    plot.dat &lt;- barplot(t(as.matrix(dat3[nrow(dat3):1,])),
+    plot.dat <- barplot(t(as.matrix(dat3[nrow(dat3):1,])),
                         beside=T,horiz=T,border=NA,plot=F)
     par(yaxt="s")
-    N.dataset &lt;- ifelse(Ntotal==-999,nrow(dat),Ntotal)
-    Start.y &lt;- N.dataset - nrow(dat) + 1
-    Difference &lt;- abs(nrow(dat)-max(c(seq(1,nrow(dat3),by=5))))
+    N.dataset <- ifelse(Ntotal==-999,nrow(dat),Ntotal)
+    Start.y <- N.dataset - nrow(dat) + 1
+    Difference <- abs(nrow(dat)-max(c(seq(1,nrow(dat3),by=5))))
     axis(2,at=plot.dat[1,c(seq(1,nrow(dat3),by=5))] + ceiling(plot.dat[2,Difference]),
          labels=rev(seq(Start.y,N.dataset,by=5)),
          las=1,adj=0.5,cex.axis=0.85)
@@ -154,9 +154,9 @@ Plot.Observations &lt;- function(reliability.data,Ntotal=-999){
     barplot(t(as.matrix(fail[length(fail):1])),col="black",
             horiz=T,border=NA,
             xlab="time")
-    plot.dat &lt;- barplot(t(as.matrix(fail[length(fail):1])),
+    plot.dat <- barplot(t(as.matrix(fail[length(fail):1])),
                         horiz=T,border=NA,plot=F)
-    Difference &lt;- abs(length(fail)-max(c(seq(1,length(fail),by=5))))
+    Difference <- abs(length(fail)-max(c(seq(1,length(fail),by=5))))
     axis(2,at=plot.dat[seq(1,length(fail),by=5)] + ceiling(plot.dat[2,Difference]),
          labels=rev(seq(1,length(fail),by=5)),
          las=1,adj=0.5,cex.axis=0.85)
@@ -172,122 +172,122 @@ Plot.Observations &lt;- function(reliability.data,Ntotal=-999){
 
 ###
 
-Calculate.Fhat &lt;- function(reliability.data){
+Calculate.Fhat <- function(reliability.data){
   # reliability.data has columns "time" and "event"={1,0}
-  dat1 &lt;- reliability.data
-  n &lt;- nrow(dat1)
-  dat1$suspensions &lt;- 1 - dat1$event
-  dat2 &lt;- aggregate(dat1[,2:3],list(time=dat1$time),sum)
-  names(dat2)[2:3] &lt;- c("dj","rj")
-  dat2$sum_dj &lt;- cumsum(dat2$dj)
-  dat2$sum_rj &lt;- cumsum(dat2$rj)
-  dat2$nj &lt;- 0 # set empty numeric vector
-  m &lt;- nrow(dat2)
+  dat1 <- reliability.data
+  n <- nrow(dat1)
+  dat1$suspensions <- 1 - dat1$event
+  dat2 <- aggregate(dat1[,2:3],list(time=dat1$time),sum)
+  names(dat2)[2:3] <- c("dj","rj")
+  dat2$sum_dj <- cumsum(dat2$dj)
+  dat2$sum_rj <- cumsum(dat2$rj)
+  dat2$nj <- 0 # set empty numeric vector
+  m <- nrow(dat2)
   attach(dat2)
-  dat2$nj[1] &lt;- n
+  dat2$nj[1] <- n
   for(i in 2:m){
-    dat2$nj[i] &lt;- n - sum_dj[i-1] - sum_rj[i-1]
+    dat2$nj[i] <- n - sum_dj[i-1] - sum_rj[i-1]
   }
   detach(dat2)
-  dat2$pj &lt;- dat2$dj / dat2$nj
-  dat2$qj &lt;- 1 - dat2$pj
-  dat2$Shat &lt;- cumprod(dat2$qj)
-  dat2$Fhat &lt;- 1 - dat2$Shat
-  dat3 &lt;- dat2[dat2$dj&gt;0,colnames(dat2) %in% c("time","Fhat")==T]
+  dat2$pj <- dat2$dj / dat2$nj
+  dat2$qj <- 1 - dat2$pj
+  dat2$Shat <- cumprod(dat2$qj)
+  dat2$Fhat <- 1 - dat2$Shat
+  dat3 <- dat2[dat2$dj > 0,colnames(dat2) %in% c("time","Fhat")==T]
   return(dat3)
 }
 
-Calculate.a_b &lt;- function(reliability.data){
+Calculate.a_b <- function(reliability.data){
   # reliability.data has columns "time" and "event"={1,0}
-  dat1 &lt;- reliability.data
-  n &lt;- nrow(dat1)
-  dat1$suspensions &lt;- 1 - dat1$event
-  dat2 &lt;- aggregate(dat1[,2:3],list(time=dat1$time),sum)
-  names(dat2)[2:3] &lt;- c("dj","rj")
-  dat2$sum_dj &lt;- cumsum(dat2$dj)
-  dat2$sum_rj &lt;- cumsum(dat2$rj)
-  dat2$nj &lt;- 0 # set empty numeric vector
-  m &lt;- nrow(dat2)
+  dat1 <- reliability.data
+  n <- nrow(dat1)
+  dat1$suspensions <- 1 - dat1$event
+  dat2 <- aggregate(dat1[,2:3],list(time=dat1$time),sum)
+  names(dat2)[2:3] <- c("dj","rj")
+  dat2$sum_dj <- cumsum(dat2$dj)
+  dat2$sum_rj <- cumsum(dat2$rj)
+  dat2$nj <- 0 # set empty numeric vector
+  m <- nrow(dat2)
   attach(dat2)
-  dat2$nj[1] &lt;- n
+  dat2$nj[1] <- n
   for(i in 2:m){
-    dat2$nj[i] &lt;- n - sum_dj[i-1] - sum_rj[i-1]
+    dat2$nj[i] <- n - sum_dj[i-1] - sum_rj[i-1]
   }
   detach(dat2)
-  dat2$sigma_j &lt;- dat2$dj / (dat2$nj*(dat2$nj - dat2$dj))
-  cumsum.sigma &lt;- cumsum(dat2$sigma_j)
-  dat2$sigmahat &lt;- 0 # set empty numeric vector
+  dat2$sigma_j <- dat2$dj / (dat2$nj*(dat2$nj - dat2$dj))
+  cumsum.sigma <- cumsum(dat2$sigma_j)
+  dat2$sigmahat <- 0 # set empty numeric vector
   for(i in 2:m){
-    dat2$sigmahat[i] &lt;- n * cumsum.sigma[i-1]
+    dat2$sigmahat[i] <- n * cumsum.sigma[i-1]
   }
-  dat2$Khat &lt;- dat2$sigmahat / (1 + dat2$sigmahat)
-  dat3 &lt;- dat2[,colnames(dat2) %in% c("time","sigmahat","Khat")==T]
-  dat4 &lt;- dat3[dat3$Khat&gt; 0 &amp; dat3$Khat &lt;1, ] # Can't be zero or 1.
-  a &lt;- min(dat4$Khat); b &lt;- max(dat4$Khat)
-  result &lt;- list(a=a, b=b)
+  dat2$Khat <- dat2$sigmahat / (1 + dat2$sigmahat)
+  dat3 <- dat2[,colnames(dat2) %in% c("time","sigmahat","Khat") == T]
+  dat4 <- dat3[dat3$Khat > 0 & dat3$Khat <1, ] # Can't be zero or 1.
+  a <- min(dat4$Khat); b <- max(dat4$Khat)
+  result <- list(a=a, b=b)
   return(result)
 }
 
-Calculate.e_val &lt;- function(ab.obj){
-  a &lt;- ab.obj$a; b &lt;- ab.obj$b
+Calculate.e_val <- function(ab.obj){
+  a <- ab.obj$a; b <- ab.obj$b
 # e_alpha is a global object created in this file (lookup table from Meeker &amp; Escobar)
-  (e_val &lt;- e_alpha[e_alpha$a==e_alpha$a[which.min(abs(a - e_alpha$a))] &amp;
+  (e_val <- e_alpha[e_alpha$a==e_alpha$a[which.min(abs(a - e_alpha$a))] &
                       e_alpha$b==e_alpha$b[which.min(abs(b - e_alpha$b))],
                     "cl_0.95"])
   return(e_val)
 }
 
-Calc.95.simultaneous.CI &lt;- function(reliability.data,e_val){
+Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   print(c("Adjustments to 95 % simultaneous confidence bounds to account for"))
   print(c("non-increasing values follow method of Meeker &amp; Escobar (1998)"))
-  dat1 &lt;- reliability.data
-  n &lt;- nrow(dat1)
-  dat1$suspensions &lt;- 1 - dat1$event
-  dat2 &lt;- aggregate(dat1[,2:3],list(time=dat1$time),sum)
-  names(dat2)[2:3] &lt;- c("dj","rj")
-  dat2$sum_dj &lt;- cumsum(dat2$dj)
-  dat2$sum_rj &lt;- cumsum(dat2$rj)
-  dat2$nj &lt;- 0 # set empty numeric vector
-  m &lt;- nrow(dat2)
+  dat1 <- reliability.data
+  n <- nrow(dat1)
+  dat1$suspensions <- 1 - dat1$event
+  dat2 <- aggregate(dat1[,2:3],list(time=dat1$time),sum)
+  names(dat2)[2:3] <- c("dj","rj")
+  dat2$sum_dj <- cumsum(dat2$dj)
+  dat2$sum_rj <- cumsum(dat2$rj)
+  dat2$nj <- 0 # set empty numeric vector
+  m <- nrow(dat2)
   attach(dat2)
-  dat2$nj[1] &lt;- n
+  dat2$nj[1] <- n
   for(i in 2:m){
-    dat2$nj[i] &lt;- n - sum_dj[i-1] - sum_rj[i-1]
+    dat2$nj[i] <- n - sum_dj[i-1] - sum_rj[i-1]
   }
   detach(dat2)
-  dat2$pj &lt;- dat2$dj / dat2$nj
-  dat2$qj &lt;- 1 - dat2$pj
-  dat2$Shat &lt;- cumprod(dat2$qj)
-  dat2$Fhat &lt;- 1 - dat2$Shat
-  dat3 &lt;- dat2[dat2$dj&gt;0,]
-  dat3$se.summation &lt;- dat3$pj / (dat3$nj*(1-dat3$pj))
-  sum.term &lt;- cumsum(dat3$se.summation)
+  dat2$pj <- dat2$dj / dat2$nj
+  dat2$qj <- 1 - dat2$pj
+  dat2$Shat <- cumprod(dat2$qj)
+  dat2$Fhat <- 1 - dat2$Shat
+  dat3 <- dat2[dat2$dj   > 0,]
+  dat3$se.summation <- dat3$pj / (dat3$nj*(1-dat3$pj))
+  sum.term <- cumsum(dat3$se.summation)
   attach(dat3)
-  dat3$se &lt;- sqrt( (Shat)^2 * sum.term )
+  dat3$se <- sqrt( (Shat)^2 * sum.term )
   detach(dat3)
-  dat3$w &lt;- exp((e_val*dat3$se) / (dat3$Fhat*(1-dat3$Fhat)))
+  dat3$w <- exp((e_val*dat3$se) / (dat3$Fhat*(1-dat3$Fhat)))
   attach(dat3)
-  dat3$loUnadj &lt;- Fhat / (Fhat + (1-Fhat)*w)
-  dat3$hiUnadj &lt;- Fhat / (Fhat + (1-Fhat)/w)
+  dat3$loUnadj <- Fhat / (Fhat + (1-Fhat)*w)
+  dat3$hiUnadj <- Fhat / (Fhat + (1-Fhat)/w)
   detach(dat3)
-  dat4 &lt;- dat3[is.nan(dat3$se)==F,]
-  lo.NonDecreasing &lt;- ifelse(sum(diff(dat4$loUnadj)&lt;0)==0,"No","Yes")
-  hi.NonDecreasing &lt;- ifelse(sum(diff(dat4$hiUnadj)&lt;0)==0,"No","Yes")
+  dat4 <- dat3[is.nan(dat3$se)==F,]
+  lo.NonDecreasing <- ifelse(sum(diff(dat4$loUnadj) < 0)==0,"No","Yes")
+  hi.NonDecreasing <- ifelse(sum(diff(dat4$hiUnadj)  < 0)==0,"No","Yes")
   if(lo.NonDecreasing=="Yes"){
-    Max.lo &lt;- max(dat3$loUnadj,na.rm=T)
+    Max.lo <- max(dat3$loUnadj,na.rm=T)
     dat3$lo=dat3$loUnadj
-    dat3$lo[which.max(dat3$loUnadj):length(dat3$loUnadj)] &lt;- Max.lo
+    dat3$lo[which.max(dat3$loUnadj):length(dat3$loUnadj)] <- Max.lo
   }else{
     dat3$lo=dat3$loUnadj
   }
   if(hi.NonDecreasing=="Yes"){
-    Min.hi &lt;- min(dat3$hiUnadj,na.rm=T)
+    Min.hi <- min(dat3$hiUnadj,na.rm=T)
     dat3$hi=dat3$hiUnadj
-    dat3$hi[1:which.min(dat3$hiUnadj)] &lt;- Min.hi
+    dat3$hi[1:which.min(dat3$hiUnadj)] <- Min.hi
   }else{
     dat3$hi=dat3$hiUnadj
   }
-  return(dat3[dat3$Fhat&gt;0 &amp; dat3$Fhat &lt;1,
+  return(dat3[dat3$Fhat > 0 & dat3$Fhat <1,
               colnames(dat3)%in%c("time","Fhat","lo","hi")])
 }
 
@@ -295,7 +295,7 @@ Calc.95.simultaneous.CI &lt;- function(reliability.data,e_val){
 
 # Reference table for e_{a,b,1-alpha/2} factors from Table 3.5
 # of Meeker &amp; Escobar (1998)
-e_alpha &lt;- data.frame(
+e_alpha <- data.frame(
   a = c(rep(c(0.005,0.01,0.05,0.1),4)),
   b = c(rep(c(0.995,0.99,0.95,0.9),each=4)),
   cl_0.95 = c(3.36,3.34,3.28,3.25,
@@ -307,22 +307,22 @@ e_alpha &lt;- data.frame(
 
 # Functions to produce probability plots in Step 1 of analysis:
 
-Normal.probability.plot &lt;- function(x,y,gridlines=F,
+Normal.probability.plot <- function(x,y,gridlines=F,
                                     label.individual.axes=T){
   # x = time; y = F(t).
-  x &lt;- x[y &gt; 0 &amp; y &lt;1] # Can't be plotted on probability paper.
-  y &lt;- y[y &gt; 0 &amp; y &lt;1]
-  y.trans &lt;- qnorm(y)
-  yticks &lt;- seq(round(min(y.trans),2),round(max(y.trans),2),
+  x <- x[y >  0 & y < 1] # Can't be plotted on probability paper.
+  y <- y[y >  0 & y < 1]
+  y.trans <- qnorm(y)
+  yticks <- seq(round(min(y.trans),2),round(max(y.trans),2),
                 length.out=5)
-  xticks &lt;- round(seq(0,xmax(max(x)),length.out=5),0)
+  xticks <- round(seq(0,xmax(max(x)),length.out=5),0)
   if(label.individual.axes==T){X.label &lt;- "Time"
   } else{
-    X.label &lt;- ""
+    X.label <- ""
   }
   if(label.individual.axes==T){Y.label &lt;- "Unreliability, F(t)=1-R(t)"
   } else{
-    Y.label &lt;- ""
+    Y.label <- ""
   }
   plot(x,y.trans,xlim=c(0,xmax(max(x))),
        ylim=c(round(min(y.trans),2),round(max(y.trans),2)),
@@ -337,24 +337,24 @@ Normal.probability.plot &lt;- function(x,y,gridlines=F,
   }
 }
 
-Lognormal.probability.plot &lt;- function(x,y,gridlines=F,
+Lognormal.probability.plot <- function(x,y,gridlines=F,
                                        label.individual.axes=T){
   # x = time; y = F(t).
-  x &lt;- x[y &gt; 0 &amp; y &lt;1] # Can't be plotted on probability paper.
-  y &lt;- y[y &gt; 0 &amp; y &lt;1]
-  x.trans &lt;- log(x)
-  y.trans &lt;- qnorm(y)
-  yticks &lt;- seq(round(min(y.trans),2),round(max(y.trans),2),
+  x <- x[y >  0 & y < 1] # Can't be plotted on probability paper.
+  y <- y[y > 0  & y < 1]
+  x.trans <- log(x)
+  y.trans <- qnorm(y)
+  yticks <- seq(round(min(y.trans),2),round(max(y.trans),2),
                 length.out=5)
-  xticks &lt;- round(seq(floor(min(x.trans)),ceiling(max(x.trans)),
+  xticks <- round(seq(floor(min(x.trans)),ceiling(max(x.trans)),
                       length.out=5),0)
   if(label.individual.axes==T){X.label &lt;- "Time"
   } else{
-    X.label &lt;- ""
+    X.label <- ""
   }
   if(label.individual.axes==T){Y.label &lt;- "Unreliability, F(t)=1-R(t)"
   } else{
-    Y.label &lt;- ""
+    Y.label <- ""
   }
   plot(x.trans,y.trans,xlim=c(floor(min(x.trans)),ceiling(max(x.trans))),
        ylim=c(round(min(y.trans),2),round(max(y.trans),2)),
@@ -369,35 +369,35 @@ Lognormal.probability.plot &lt;- function(x,y,gridlines=F,
   }
 }
 
-add95CIs.Lognormal &lt;- function(CL.data){
+add95CIs.Lognormal <- function(CL.data){
   # CL.data is the data frame generated from using Calc.95.simultaneous.CI()
-  time &lt;- CL.data$time
-  lo &lt;- CL.data$lo # the lower 95% simultaneous confidence limit
-  hi &lt;- CL.data$hi # the upper 95% simultaneous confidence limit
+  time <- CL.data$time
+  lo <- CL.data$lo # the lower 95% simultaneous confidence limit
+  hi <- CL.data$hi # the upper 95% simultaneous confidence limit
   points(log(time),qnorm(lo),pch="-",lwd=2,cex=1.2)
   points(log(time),qnorm(hi),pch="-",lwd=2,cex=1.2)
 }
 
-Weibull.backtrans.Y &lt;- function(y){1-(1/exp(exp(y)))}
+Weibull.backtrans.Y <- function(y){1-(1/exp(exp(y)))}
 
-Weibull.probability.plot &lt;- function(x,y,gridlines=F,
+Weibull.probability.plot <- function(x,y,gridlines=F,
                                      label.individual.axes=T){
   # x = time; y = F(t).
-  x &lt;- x[y &gt; 0 &amp; y &lt;1] # Can't be plotted on probability paper.
-  y &lt;- y[y &gt; 0 &amp; y &lt;1]
-  x.trans &lt;- log(x)
-  y.trans &lt;- log(-log(1-y))
-  yticks &lt;- seq(round(min(y.trans),2),round(max(y.trans),2),
+  x <- x[y > 0 &  y <1] # Can't be plotted on probability paper.
+  y <- y[y > 0 &  y < 1]
+  x.trans <- log(x)
+  y.trans <- log(-log(1-y))
+  yticks <- seq(round(min(y.trans),2),round(max(y.trans),2),
                 length.out=5)
-  xticks &lt;- round(seq(floor(min(x.trans)),ceiling(max(x.trans)),
+  xticks <- round(seq(floor(min(x.trans)),ceiling(max(x.trans)),
                       length.out=5),0)
   if(label.individual.axes==T){X.label &lt;- "Time"
   } else{
-    X.label &lt;- ""
+    X.label <- ""
   }
   if(label.individual.axes==T){Y.label &lt;- "Unreliability, F(t)=1-R(t)"
   } else{
-    Y.label &lt;- ""
+    Y.label <- ""
   }
   plot(x.trans,y.trans,xlim=c(floor(min(x.trans)),ceiling(max(x.trans))),
        ylim=c(round(min(y.trans),2),round(max(y.trans),2)),
@@ -412,34 +412,34 @@ Weibull.probability.plot &lt;- function(x,y,gridlines=F,
   }
 }
 
-add95CIs.Weibull &lt;- function(CL.data){
+add95CIs.Weibull <- function(CL.data){
   # CL.data is the data frame generated from using Calc.95.simultaneous.CI()
-  time &lt;- CL.data$time
-  lo &lt;- CL.data$lo # the lower 95% simultaneous confidence limit
-  hi &lt;- CL.data$hi # the upper 95% simultaneous confidence limit
+  time <- CL.data$time
+  lo <- CL.data$lo # the lower 95% simultaneous confidence limit
+  hi <- CL.data$hi # the upper 95% simultaneous confidence limit
   points(log(time),log(-log(1-lo)),pch="-",lwd=2,cex=1.2)
   points(log(time),log(-log(1-hi)),pch="-",lwd=2,cex=1.2)
 }
 
-Exponential.backtrans.Y &lt;- function(y){1-(1/exp(y))}
+Exponential.backtrans.Y <- function(y){1-(1/exp(y))}
 
-Exponential.probability.plot &lt;- function(x,y,gridlines=F,
+Exponential.probability.plot <- function(x,y,gridlines=F,
                                          label.individual.axes=T){
   # x = time; y = F(t).
-  x &lt;- x[y &gt; 0 &amp; y &lt;1] # Can't be plotted on probability paper.
-  y &lt;- y[y &gt; 0 &amp; y &lt;1]
-  y.trans &lt;- -log(1-y)
-  yticks &lt;- seq(round(min(y.trans),2),
+  x <- x[y > 0 &  y < 1] # Can't be plotted on probability paper.
+  y <- y[y > 0 &  y < 1]
+  y.trans <- -log(1-y)
+  yticks <- seq(round(min(y.trans),2),
                 round(max(y.trans),2),
                 length.out=5)
-  xticks &lt;- round(seq(0,xmax(max(x)),length.out=5),0)
+  xticks <- round(seq(0,xmax(max(x)),length.out=5),0)
   if(label.individual.axes==T){X.label &lt;- "Time"
   } else{
-    X.label &lt;- ""
+    X.label <- ""
   }
-  if(label.individual.axes==T){Y.label &lt;- "Unreliability, F(t)=1-R(t)"
+  if(label.individual.axes==T){Y.label <- "Unreliability, F(t)=1-R(t)"
   } else{
-    Y.label &lt;- ""
+    Y.label <- ""
   }
   plot(x,y.trans,xlim=c(0,xmax(max(x))),
        ylim=c(round(min(y.trans),2),
@@ -455,21 +455,21 @@ Exponential.probability.plot &lt;- function(x,y,gridlines=F,
   }
 }
 
-add95CIs.Exponential &lt;- function(CL.data){
+add95CIs.Exponential <- function(CL.data){
   # CL.data is the data frame generated from using Calc.95.simultaneous.CI()
-  time &lt;- CL.data$time
-  lo &lt;- CL.data$lo # the lower 95% simultaneous confidence limit
-  hi &lt;- CL.data$hi # the upper 95% simultaneous confidence limit
+  time <- CL.data$time
+  lo <- CL.data$lo # the lower 95% simultaneous confidence limit
+  hi <- CL.data$hi # the upper 95% simultaneous confidence limit
   points(time,-log(1-lo),pch="-",lwd=2,cex=1.2)
   points(time,-log(1-hi),pch="-",lwd=2,cex=1.2)
 }
 
-Probability.Plots &lt;- function(reliability.data,gridlines=F,
+Probability.Plots <- function(reliability.data,gridlines=F,
                               label.individual.axes=F,dist="All"){
-  dat &lt;- reliability.data
-  Fhat &lt;- Calculate.Fhat(dat) # $time, $Fhat
-  e_val &lt;- Calculate.e_val(Calculate.a_b(dat))
-  simult.CLs &lt;- Calc.95.simultaneous.CI(dat,e_val=e_val) # $time, $lo, $hi
+  dat   <- reliability.data
+  Fhat <- Calculate.Fhat(dat) # $time, $Fhat
+  e_val <- Calculate.e_val(Calculate.a_b(dat))
+  simult.CLs <- Calc.95.simultaneous.CI(dat,e_val=e_val) # $time, $lo, $hi
   if(dist=="All"){
   par(mfrow=c(2,2), mar=c(3, 3, 1, 0.25) + 0.1,cex.axis=0.75,
       oma=c(0,0,0,0),mgp=c(3,1,0),xpd=T,mai=c(0.75,0.75,0.2,0.2))
@@ -533,14 +533,14 @@ Probability.Plots &lt;- function(reliability.data,gridlines=F,
 # simulation-based methods, for most situations, provide important
 # improvements over normal-approximation methods.
 
-MTTF.boot.percentile.adj &lt;- function(data,i){
-  d &lt;- data[i,]
-  mod &lt;- Lifedata.MLE(Surv(time,event)~1,
+MTTF.boot.percentile.adj <- function(data,i){
+  d <- data[i,]
+  mod <- Lifedata.MLE(Surv(time,event)~1,
                       d,
                       dist="weibull")
-  beta.b &lt;- 1/unname(exp(mod$coef[2]))
-  eta.b &lt;- unname(exp(mod$coef[1]))
-  MTTF &lt;- Weibull.2p.Expectation(eta=eta.b,
+  beta.b <- 1/unname(exp(mod$coef[2]))
+  eta.b <- unname(exp(mod$coef[1]))
+  MTTF <- Weibull.2p.Expectation(eta=eta.b,
                                  beta=beta.b)
   return(MTTF)
 }
@@ -549,53 +549,53 @@ MTTF.boot.percentile.adj &lt;- function(data,i){
 
 # For calculating joint confidence region:
 
-sev.pdf &lt;- function(z){exp(z - exp(z))}
-sev.cdf &lt;- function(z){1-exp(-exp(z))}
+sev.pdf <- function(z){exp(z - exp(z))}
+sev.cdf <- function(z){1-exp(-exp(z))}
 
-loglik.sev &lt;- function(data,mu,sigma){
-  t &lt;- data$time
-  ll.vec &lt;- numeric(nrow(data))
-  delta &lt;- data$event
-  t.lnorm &lt;- (log(t)-mu)/sigma
+loglik.sev <- function(data,mu,sigma){
+  t <- data$time
+  ll.vec <- numeric(nrow(data))
+  delta <- data$event
+  t.lnorm <- (log(t)-mu)/sigma
   for(i in 1:nrow(data)){
-    ll.vec[i] &lt;- (delta[i] * log(1 / (sigma*t[i]))) +
+    ll.vec[i] <- (delta[i] * log(1 / (sigma*t[i]))) +
                  (delta[i] *
                     log(sev.pdf(t.lnorm[i]))) +
                  ((1-delta[i]) *
                     log(1 - sev.cdf(t.lnorm[i])))
   }
-  loglik &lt;- sum(ll.vec)
+  loglik <- sum(ll.vec)
   return(loglik)
 }
 
-contour.val &lt;- function(dataset,mu.input,sigma.input,maximum.loglik){
+contour.val <- function(dataset,mu.input,sigma.input,maximum.loglik){
   pchisq(q=-2*(loglik.sev(dataset,mu.input,sigma.input) -
                  maximum.loglik),df = 2)
 }
 
-Get.contour.plot.data &lt;- function(data,fitted.2parameter.Weibull.model,steps){
-  mod &lt;- fitted.2parameter.Weibull.model # 2 parameter Weibull model fitted using SPREDA
-  mu.MLE &lt;- unname(mod$coef[1])
-  sigma.MLE &lt;- unname(exp(mod$coef[2]))
-  Max.loglik &lt;- loglik.sev(data,mu=mu.MLE,sigma=sigma.MLE)
+Get.contour.plot.data <- function(data,fitted.2parameter.Weibull.model,steps){
+  mod <- fitted.2parameter.Weibull.model # 2 parameter Weibull model fitted using SPREDA
+  mu.MLE <- unname(mod$coef[1])
+  sigma.MLE <- unname(exp(mod$coef[2]))
+  Max.loglik <- loglik.sev(data,mu=mu.MLE,sigma=sigma.MLE)
   # Use 95% CIs for MLEs to determine input range for parameters.
-  beta.95cl_hi &lt;- 1 / (summary(mod)$coefmat["sigma","95% Lower"])
-  beta.95cl_lo &lt;- 1 / (summary(mod)$coefmat["sigma","95% Upper"])
-  eta.95cl_lo &lt;- exp(summary(mod)$coefmat["(Intercept)","95% Lower"])
-  eta.95cl_hi &lt;- exp(summary(mod)$coefmat["(Intercept)","95% Upper"])
+  beta.95cl_hi <- 1 / (summary(mod)$coefmat["sigma","95% Lower"])
+  beta.95cl_lo <- 1 / (summary(mod)$coefmat["sigma","95% Upper"])
+  eta.95cl_lo <- exp(summary(mod)$coefmat["(Intercept)","95% Lower"])
+  eta.95cl_hi <- exp(summary(mod)$coefmat["(Intercept)","95% Upper"])
   # Input ranges (steps)
-  Betas &lt;- seq(0.9*beta.95cl_lo,1.1*beta.95cl_hi,length.out=steps)
-  Etas &lt;- seq(0.9*eta.95cl_lo,1.1*eta.95cl_hi,length.out=steps)
-  Sigmas &lt;- 1 / Betas
-  Mus &lt;- log(Etas)
-  ContourVals.df &lt;- data.frame(Mus=rep(Mus,steps),
+  Betas <- seq(0.9*beta.95cl_lo,1.1*beta.95cl_hi,length.out=steps)
+  Etas <- seq(0.9*eta.95cl_lo,1.1*eta.95cl_hi,length.out=steps)
+  Sigmas <- 1 / Betas
+  Mus <- log(Etas)
+  ContourVals.df <- data.frame(Mus=rep(Mus,steps),
                                Sigmas=rep(Sigmas,each=steps))
   for(i in 1:nrow(ContourVals.df)){
-    ContourVals.df$z[i] &lt;- contour.val(data,ContourVals.df$Mus[i],
+    ContourVals.df$z[i] <- contour.val(data,ContourVals.df$Mus[i],
                                        ContourVals.df$Sigmas[i],Max.loglik)
   }
-  ContourVals.df$Eta &lt;- exp(ContourVals.df$Mus)
-  ContourVals.df$Beta &lt;- 1 / ContourVals.df$Sigmas
+  ContourVals.df$Eta <- exp(ContourVals.df$Mus)
+  ContourVals.df$Beta <- 1 / ContourVals.df$Sigmas
   return(ContourVals.df)
   # z vector is the probability that Chi-square stat with 2d.f. is less than
   # or equal to -2log likelihood ratio, for each input pair of Betas,Etas. Uses
@@ -603,25 +603,25 @@ Get.contour.plot.data &lt;- function(data,fitted.2parameter.Weibull.model,steps)
   # likelihood ratio statistic.
 }
 
-Weibull.Confidence.Region &lt;- function(data,model,probability,
+Weibull.Confidence.Region <- function(data,model,probability,
                                       title,show.contour.labels,
                                       steps=100,html="No"){
   # requires lattice package.
   # Implemented for the fit of the 2-parameter Weibull model only.
-  beta.MLE &lt;- 1 / unname(exp(model$coef[2]))
-  eta.MLE &lt;- unname(exp(model$coef[1]))
-  reliability.data &lt;- data
-  fitted.Weibull.model &lt;- model
-  label.show &lt;- as.logical(show.contour.labels)
-  Contour.df &lt;- Get.contour.plot.data(reliability.data,
+  beta.MLE <- 1 / unname(exp(model$coef[2]))
+  eta.MLE <- unname(exp(model$coef[1]))
+  reliability.data <- data
+  fitted.Weibull.model <- model
+  label.show <- as.logical(show.contour.labels)
+  Contour.df <- Get.contour.plot.data(reliability.data,
                                       fitted.Weibull.model,steps)
   if(html=="Yes"){ # this right align is not consistent for html generation.
-    title.settings &lt;- list(
+    title.settings <- list(
       par.main.text = list(font = 2,
                           just = "right",
                           x = grid::unit(170, "mm")))
   } else{ # Use default settings.
-    title.settings &lt;- list(par.main.text=trellis.par.get("par.main.text"))
+    title.settings <- list(par.main.text=trellis.par.get("par.main.text"))
   }
   contourplot(z ~ Eta * Beta, data=Contour.df,
                       at = probability, labels=label.show,
@@ -636,50 +636,50 @@ Weibull.Confidence.Region &lt;- function(data,model,probability,
 ###########
 
 # Some functions used for internal referencing in R markdown:
-# chunkref &lt;- local({
+# chunkref <- local({
   # function(chunklabel) {
     # sprintf('[%s](#%s)', chunklabel, chunklabel )
   # }
 # })
 
-# secref &lt;- local({
+# secref <- local({
   # function(seclabel) {
     # sprintf('[%s](#%s)', seclabel, seclabel )
   # }
 # })
 
-# pgref &lt;- local({
+# pgref <- local({
   # function(n)
     # sprintf('[Page-%i](#Page-%i)', n, n)
 # })
 
-# sec &lt;- local({
+# sec <- local({
   # function(seclabel) {
-    # sprintf('# &lt;a name="%s"/&gt; %s', seclabel, seclabel )
+    # sprintf('# <a name="%s"/&gt; %s', seclabel, seclabel )
   # }
 # })
 
-# pgcount &lt;- local({
-  # pg &lt;- 0
+# pgcount <- local({
+  # pg <- 0
   # function(inc=T) {
-    # if( inc ) { pg &lt;&lt;- pg + 1 }
+    # if( inc ) { pg <<- pg + 1 }
     # return( pg )
   # }
 # })
 
-# pganchor &lt;- local({
+# pganchor <- local({
   # function(doLabel=T) {
     # if( doLabel) {
-      # sprintf('\n-----\nPage-%i\n&lt;a name="Page-%i"/&gt;\n', pgcount(inc=F), pgcount() )
+      # sprintf('\n-----\nPage-%i\n<a name="Page-%i"/&gt;\n', pgcount(inc=F), pgcount() )
     # } else {
-      # sprintf('\n&lt;a name="Page-%i"/&gt;\n', pgcount() )
+      # sprintf('\n<a name="Page-%i"/&gt;\n', pgcount() )
     # }
   # }
 # })
 
 # knit_hooks$set( anchor = function(before, options, envir) {
   # if ( before ) {
-    # sprintf('&lt;a name="%s"/&gt;\n', options$label )
+    # sprintf('<a name="%s"/&gt;\n', options$label )
   # }
 # })
 
@@ -694,4 +694,3 @@ Weibull.Confidence.Region &lt;- function(data,model,probability,
     # pganchor();
   # }
 # })
-</pre></body></html>Ztext/plain
