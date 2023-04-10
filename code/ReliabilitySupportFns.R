@@ -272,17 +272,16 @@ Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   sum.term <- cumsum(dat3$se.summation)
   attach(dat3)
   # Change to dat2$Shat ni=ot Shat
-  dat3$se <- sqrt( (dat2$Shat)^2 * sum.term )
+  # dat3$se <- sqrt( (dat2$Shat)^2 * sum.term )
+  dat3$se <- sqrt( (Shat)^2 * sum.term )
   detach(dat3)
   dat3$w <- exp((e_val*dat3$se) / (dat3$Fhat*(1-dat3$Fhat)))
-  attach(dat3)
-  dat3$loUnadj <- Fhat / (Fhat + (1-Fhat)*w)
-  dat3$hiUnadj <- Fhat / (Fhat + (1-Fhat)/w)
-  detach(dat3)
+  # Remove the attach strange behavior with it time was calculated again
+  dat3$loUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat)*w)
+  dat3$hiUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat)/w)
   dat4 <- dat3[is.nan(dat3$se)==F,]
-  browser()
-  lo.NonDecreasing <- ifelse(sum(diff(dat4$loUnadj) < 0)==0,"No","Yes")
-  hi.NonDecreasing <- ifelse(sum(diff(dat4$hiUnadj)  < 0)==0,"No","Yes")
+  lo.NonDecreasing <- ifelse(sum(diff(as.matrix(dat4$loUnadj)) < 0)==0,"No","Yes")
+  hi.NonDecreasing <- ifelse(sum(diff(as.matrix(dat4$hiUnadj))  < 0)==0,"No","Yes")
   if(lo.NonDecreasing=="Yes"){
     Max.lo <- max(dat3$loUnadj,na.rm=T)
     dat3$lo=dat3$loUnadj
@@ -390,8 +389,7 @@ add95CIs.Lognormal <- function(CL.data){
 
 Weibull.backtrans.Y <- function(y){1-(1/exp(exp(y)))}
 
-Weibull.probability.plot <- function(x,y,gridlines=F,
-                                     label.individual.axes=T){
+Weibull.probability.plot <- function(x,y,gridlines=F, label.individual.axes = T){
   # x = time; y = F(t).
   x <- x[y > 0 &  y <1] # Can't be plotted on probability paper.
   y <- y[y > 0 &  y < 1]
@@ -401,18 +399,22 @@ Weibull.probability.plot <- function(x,y,gridlines=F,
                 length.out=5)
   xticks <- round(seq(floor(min(x.trans)),ceiling(max(x.trans)),
                       length.out=5),0)
-  if(label.individual.axes==T){X.label &lt;- "Time"
-  } else{
-    X.label <- ""
+
+  if(label.individual.axes==T){
+          X.label <- "Time"
+  }else{
+          X.label <- ""
   }
-  if(label.individual.axes==T){Y.label &lt;- "Unreliability, F(t)=1-R(t)"
+  if(label.individual.axes==T){
+          Y.label <- "Unreliability, F(t)=1-R(t)"
   } else{
-    Y.label <- ""
+          Y.label <- ""
   }
   plot(x.trans,y.trans,xlim=c(floor(min(x.trans)),ceiling(max(x.trans))),
        ylim=c(round(min(y.trans),2),round(max(y.trans),2)),
        axes=F,pch=16,adj=0.5,
        main="Weibull",xlab=X.label, ylab=Y.label)
+
   axis(1,at=xticks, labels=round(exp(xticks),0))
   axis(2,at=yticks,labels=sprintf("%.2f",round(Weibull.backtrans.Y(yticks),2)),
        las=1,adj=0.5)
@@ -474,8 +476,7 @@ add95CIs.Exponential <- function(CL.data){
   points(time,-log(1-hi),pch="-",lwd=2,cex=1.2)
 }
 
-Probability.Plots <- function(reliability.data,gridlines=F,
-                              label.individual.axes=F,dist="All"){
+Probability.Plots <- function(reliability.data,gridlines=F, label.individual.axes=F, dist="All"){
   dat   <- reliability.data
   Fhat <- Calculate.Fhat(dat) # $time, $Fhat
   e_val <- Calculate.e_val(Calculate.a_b(dat))
