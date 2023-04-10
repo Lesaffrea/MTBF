@@ -276,8 +276,8 @@ Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   dat3$w <- exp((e_val*dat3$se) / (dat3$Fhat*(1-dat3$Fhat)))
   # Remove the attach strange behavior with it time was calculated again
   #
-  dat3$loUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat)* dat3$w)
-  dat3$hiUnadj <- dat3$Fhat / (dat3$Fhat + (1-lenght(dat3$Fhat))/ dat3$w)
+  dat3$loUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat) * dat3$w)
+  dat3$hiUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat) / dat3$w)
   dat4 <- dat3[is.nan(dat3$se)==F,]
   lo.NonDecreasing <- ifelse(sum(diff(as.matrix(dat4$loUnadj)) < 0)==0,"No","Yes")
   hi.NonDecreasing <- ifelse(sum(diff(as.matrix(dat4$hiUnadj))  < 0)==0,"No","Yes")
@@ -315,8 +315,7 @@ e_alpha <- data.frame(
 
 # Functions to produce probability plots in Step 1 of analysis:
 
-Normal.probability.plot <- function(x,y,gridlines=F,
-                                    label.individual.axes=T){
+Normal.probability.plot <- function(x, y ,gridlines=F, label.individual.axes=T){
   # x = time; y = F(t).
   x <- x[y >  0 & y < 1] # Can't be plotted on probability paper.
   y <- y[y >  0 & y < 1]
@@ -491,7 +490,7 @@ Probability.Plots <- function(reliability.data, gridlines=F, label.individual.ax
   Lognormal.probability.plot(Fhat$time,Fhat$Fhat,gridlines,
                              label.individual.axes)
   add95CIs.Lognormal(simult.CLs)
-  # Plot for Normal distbn.
+  # Plot for Normal distribution
   Normal.probability.plot(Fhat$time,Fhat$Fhat,gridlines,
                           label.individual.axes)
   points(simult.CLs$time,qnorm(simult.CLs$lo),pch="-",lwd=2,cex=1.2)
