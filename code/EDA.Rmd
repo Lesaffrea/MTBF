@@ -209,7 +209,7 @@ As we can see with the second material the difference between MTBF and mode is l
 
 In case of the first material, we could cenored the extrem, and then do a calculation with Weibull, which will give us the reliability that we can transform in MTBF. 
 
-The **weibull* distribution is usually used in reliability, the method is different than the expectation for MTBF. We build a molde with both materail in this case. 
+The **weibull** distribution is usually used in reliability, the method is different than the expectation for MTBF. We build a model with both materials in this case. 
 
 
 ```{r weibull_model, echo=FALSE}
