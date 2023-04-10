@@ -271,14 +271,13 @@ Calc.95.simultaneous.CI <- function(reliability.data,e_val){
   dat3$se.summation <- dat3$pj / (dat3$nj*(1-dat3$pj))
   sum.term <- cumsum(dat3$se.summation)
   attach(dat3)
-  # Change to dat2$Shat ni=ot Shat
-  # dat3$se <- sqrt( (dat2$Shat)^2 * sum.term )
-  dat3$se <- sqrt( (Shat)^2 * sum.term )
+  dat3$se <- sqrt( (Shat)^2 * abs(sum.term ))
   detach(dat3)
   dat3$w <- exp((e_val*dat3$se) / (dat3$Fhat*(1-dat3$Fhat)))
   # Remove the attach strange behavior with it time was calculated again
-  dat3$loUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat)*w)
-  dat3$hiUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat)/w)
+  #
+  dat3$loUnadj <- dat3$Fhat / (dat3$Fhat + (1-dat3$Fhat)* dat3$w)
+  dat3$hiUnadj <- dat3$Fhat / (dat3$Fhat + (1-lenght(dat3$Fhat))/ dat3$w)
   dat4 <- dat3[is.nan(dat3$se)==F,]
   lo.NonDecreasing <- ifelse(sum(diff(as.matrix(dat4$loUnadj)) < 0)==0,"No","Yes")
   hi.NonDecreasing <- ifelse(sum(diff(as.matrix(dat4$hiUnadj))  < 0)==0,"No","Yes")
@@ -476,7 +475,7 @@ add95CIs.Exponential <- function(CL.data){
   points(time,-log(1-hi),pch="-",lwd=2,cex=1.2)
 }
 
-Probability.Plots <- function(reliability.data,gridlines=F, label.individual.axes=F, dist="All"){
+Probability.Plots <- function(reliability.data, gridlines=F, label.individual.axes=F, dist="All"){
   dat   <- reliability.data
   Fhat <- Calculate.Fhat(dat) # $time, $Fhat
   e_val <- Calculate.e_val(Calculate.a_b(dat))
