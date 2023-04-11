@@ -37,9 +37,13 @@ output_data   <-output_data %>%
 
 In this document, we explore the **MTBF** based on a data set from **Rio**. The main aim was about how to calculate the **MTBF**, which could be valid, that do we take the standard formula $$\frac{delta \space time}{number \space incidents}$$ or do we calculate a distribution of independent per days, the difference is significant in our case from about 20 days to 40 days, we calculate the CI as well which is small, it means the MTBF under rate the number of days between failure.
 
+The previous formula is a simple definition, other mentioned MTBF as the arithmetic value of reliability function R(t), which can be expressed as the *expected value of the density function f(t)* or $$ MTBF \space  = \space \int_{0}^{\infty} tf(t)dt \\ Density \space f(t) = \lambda e^{-\lambda t} $$
+
+Usually the MTBF is express in hours, which is not the current case, the distribution used is often the **weinbull**, that we use below.  
+
 To build this document, the **SKF** document **Bearing damage and failure analysis** has been  used. 
 
- For information the bearings failures, which are exceptional as most bearings live longer that the device they are associated with. 
+For information the bearings failures, which are exceptional as most bearings live longer that the device they are associated with. In case of bearing it means we deal with the MTTF *(mean time to failure)* rather than the *MTBF*. 
  
  |  Type of failures for bearings |
  |--------------------------------|
@@ -49,17 +53,16 @@ To build this document, the **SKF** document **Bearing damage and failure analys
  |  1/6 others                    |
  
  
- Before to go further the definition of the MTBF is worst to mentioned, it is the number of failures to repair in a period of time, it is an arithmetic mean, so nothing to do with distribution as mentioned in this document.  Its meaning is therefore restricted as we show below the difference between the distribution calculation and the MTBF is important. 
+ Before to go further the definition of the MTBF is worst to mentioned, that we use the number of failures to repair in a period of time, which is an arithmetic mean, we compare with the density and raise some question as we have a lower value using the density.  
  
- We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are multomodal, the MTBF is taken as the lowest model of the distribution. 
+ We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are mulimodal, the MTBF is taken as the lowest model of the distribution. 
  
- *One point**, it has been difficult to extract the distribution of failure in bearings, in this document we try but we have a uniform distribution, which make the calculation of **MTBF** nearly impossible. 
+ **One point**, it has been difficult to extract the distribution of failure in bearings, and some censuring have been applied in some cases. 
  
-In the second stage, we test small sample and check if we can build synthetic data set out of small sample.
 
 ## Overview
 
-We show below the amount of failures for the devices. We check one material 40607997. 
+We show below the amount of failures for the devices. We check one material **40607997**. 
 
 ```{r dsp_info,echo=FALSE}
 process_data <-output_data %>%
