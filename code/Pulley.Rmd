@@ -1,0 +1,125 @@
+---
+title: "MTBF Pulley"
+author: "Alain Lesaffre"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+```{r init, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+library(janitor)
+library(boot)
+library(bootstrap)
+library(modeest)
+library(ggplot2)
+library(cowplot)
+library(ggeffects)
+library(viridis)
+library(ggpubr)
+library(WVPlots)
+library(ggridges)
+library(hrbrthemes)
+library(gridExtra)
+library(SPREDA)
+library(readxl)
+output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/Pulley output.table.xlsx")))
+```
+
+# Summary
+
+This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean. In this document we shall try to pulley **Weinbull* with two parameters, 
+
+# Data set
+
+The data set has about thirty thousand samples, we check mainly, the FLOC, the failure mode and the scheduled date. We do not have the time between failures, we do a grouping of FLO, and material and sort the schedule date and calculate the differences between dates.
+
+Many samples have been with no failure time, those samples have been excluded from the data set. 
+
+
+```{r build_dataste, echo=FALSE}
+data_set <- output_data |> dplyr::group_by(functional_location) |>
+                           dplyr::mutate( scheduled_start = as.Date(  scheduled_start,"%d-%m-%Y" , tz ="UTC")) |>
+                           dplyr::arrange( scheduled_start, .by_group = TRUE) |>
+                           dplyr::mutate( start_time  = dplyr::lag(scheduled_start) ,
+                                          failure_time = scheduled_start - start_time ) |>
+                           dplyr::filter( !is.na( failure_time) ) |>
+                           dplyr::filter( failure_time > 0 ) |>
+                           dplyr::mutate( failure_time = as.integer(failure_time),
+                                          size_sample = n())
+                     
+```
+
+The global distribution of time to failure is as follow, we have high gap between failures.
+
+```{r dsp_failure, echo=FALSE}
+ggplot( data = data_set) +
+  geom_density( aes(x = failure_time), col="orange", fill="orange") +
+  theme_minimal() +
+  labs( title="Overall time to failure",
+        x="Number of days")
+
+```
+The distribution of failure is from one to seventy seven per functional location, the low number have to be group per materail type and failure mode. 
+
+# The functional location with one failure 
+```{r one_filure, echo=FALSE}
+one_failure_data <- data_set |> 
+                      dplyr::filter( size_sample== 1)
+number_failure_mode <-length(unique(one_failure_data$failure_mode))
+```
+
+We have ```r nrow(one_failure_data)``` functional locations with one error , which are distributed over ```r number_failure_mode``` failure modes during the period considered.
+
+The failure mode for those functional areas are as follow, we can see that we have two main type of failures bearing and belt lagging.  The rule of sum is to have thirteen failures to build statistics, we shall select bearing, lagging and shaft.
+
+```{r failure_mode_1, echo=FALSE}
+table(one_failure_data$simplified_failure_mode)
+```
+
+The distribution for the three failure modes are as follow.
+
+```{r dsp_failure_mode, echo=FALSE}
+dsp_bearing <- one_failure_data |>
+                        dplyr::filter(simplified_failure_mode == "Bearing Failure" ) |>
+                         ggplot(aes(x = failure_time)) +
+                         geom_density( fill="orange" , col="orange")+
+                         theme_minimal()+
+                         labs( Title = "Bearing for FLOC one failure",
+                               x= "Days")
+                      
+dsp_lagging <- one_failure_data |>
+                        dplyr::filter(simplified_failure_mode == "Lagging Failure" ) |>
+                         ggplot(aes(x = failure_time)) +
+                         geom_density( fill="orange" , col="orange")+
+                         theme_minimal()+
+                         labs( Title = "Lagging for FLOC one failure",
+                               x= "Days")
+                      
+dsp_shaft <- one_failure_data |>
+                        dplyr::filter(simplified_failure_mode == "Shaft Failure" ) |>
+                         ggplot(aes(x = failure_time)) +
+                         geom_density( fill="orange" , col="orange")+
+                         theme_minimal()+
+                         labs( Title = "Shaft Failure for FLOC one failure",
+                               x= "Days")
+                      
+plot_grid(dsp_bearing , dsp_lagging, dsp_shaft, 
+          labels =c("Bearing","Lagging", "Shaft"),
+             ncol = 2, nrow = 2)
+
+
+bearing_data_set <-one_failure_data |>
+                        dplyr::filter(simplified_failure_mode == "Bearing Failure" )
+```
+
+We have a big spread for the three types of failure, The main challenge will be how do we want to use the analysis. Taking the bearing as example the model is in the bin between zero and two hundred days. What is surprising is failure less than 500 days for bearing, in this case we have about 25 failures or 10% of the total bearing failures. 
+
+```{r bearing_200, echo=FALSE}
+less_200 <-bearing_data_set |> dplyr::filter( failure_time < 200)
+hist(less_200$failure_time, col="blue", main="Bearing failures less than 200 days", xlab="Number days")
+```
+
+
