@@ -57,7 +57,7 @@ For information the bearings failures, which are exceptional as most bearings li
  
  We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are multimodal, the MTBF is taken as the lowest model of the distribution. 
  
- **One point**, it has been difficult to extract the distribution of failure in bearings, and some censuring have been applied in some cases. 
+**One point**: It has been difficult to extract the distribution of failure in bearings, and some censuring have been applied. 
  
 
 ## Overview
@@ -112,7 +112,7 @@ dsp_lagging <- one_material %>%
 ggarrange( dsp_all, dsp_bearing, dsp_lagging)
 ```
 
-We show the bearing failure with different view, this distribution is close to poisson, which could be approximated. We have ``r sum(one_material$day_bet_failure == 0)``` samples with zero duration in this case, it represented 17% of the samples. 
+We show the bearing failure with different view, this distribution is close to poisson, which could be approximated. We have ```r sum(one_material$day_bet_failure == 0)``` samples with zero duration in this case, it represented 17% of the samples. 
 
 
 ```{r dsp_points, echo=FALSE}
@@ -240,9 +240,9 @@ The parameters for the **wienbull** is as follow, we use a 95% CI.
 
 # Other functional location 
 
-In th previous paragraph we use one functional location, in this section we use **3074REC1PCONVELEM .BELT**, in this function location we have more than 50 failures. In this case we deal only with pulley.
+In the previous paragraph we use one functional location, in this section we use **3074REC1PCONVELEM .BELT**, in this function location we have more than 50 failures. In this case we deal only with pulley.
 
-```{r functional, echo=FALSE}
+```{r functional, echo=FALSE, warning =FALSE}
 functional_3074 <-output_data |> dplyr::filter( functional_location == "3074REC1PCONVELEM .BELT") |>
                                  dplyr::filter( stringr::str_length(material_description) > 0) |>
                                  # dplyr::mutate( material_description = factor(material_description)) |>
@@ -255,7 +255,7 @@ functional_3074 <- functional_3074 |>
                                 dplyr::filter( day_bet_failure > 0)
 ```
 
-The first pulleys description is as below, we can see that we deal with multiple pulleys *(Four)*, which make the analysis interesting and the time between faulre could be long, taking all the pulley we have a bimodal distribution.  
+The first pulleys description is as below, we can see that we deal with multiple pulleys *(Four)*, which make the analysis interesting and the time between failure could be long, taking all the pulley we have a bimodal distribution.  
 
 ```{r pulley_dec, echo=FALSE}
 knitr::kable(functional_3074$material_description[1])
@@ -263,7 +263,7 @@ knitr::kable(functional_3074$material_description[1])
 
 We show the time between failure for the four pulleys, we can notice that some failures are close to each other. We make the assumption that it is not a planned maintenance, what is surpring is the no failure between 200 and 300 days. 
 
-```{r dsp_pulley_graph, echo=FALSE, message=FALSE}
+```{r dsp_pulley_graph, echo=FALSE, message=FALSE, warning= FALSE}
 dsp_point <-ggplot( data = functional_3074, aes(x= scheduled_start, y= day_bet_failure, group= material_description, color= material_description)) +
         geom_point( ) +
         geom_jitter() +
@@ -277,7 +277,7 @@ dsp_density <- ggplot( data = functional_3074, aes(x= day_bet_failure, y= materi
 grid.arrange(dsp_point, dsp_density, 
              ncol = 1, nrow = 2)
 
-# we calculate the mode, the datset is lareday group by matterail_description 
+# we calculate the mode, the dataset is alreaday group by material_description 
 mode_functional_3074 <- functional_3074 |>
                                 dplyr::summarise( mode = list(mlv(day_bet_failure, method = "meanshift")),
                                                   mtbf = sum(day_bet_failure)/ n())
@@ -285,7 +285,7 @@ mode_functional_3074 <- functional_3074 |>
 
 ```
 
-If we use the MTBF formula which is challenging as we have period longer than a year. we have 2,75 failues per year. To build the distribution we have to consider the bimodal distribution, knowing that we have lower probability at 350 days. 
+If we use the MTBF formula which is challenging as we have period longer than a year. we have 2,75 failures per year. To build the distribution we have to consider the bimodal distribution, knowing that we have lower probability at 350 days. 
 
 If we take the mode of distribution as the inspection time we have the following values, we can notice that the MTBF is higher than the mode MTBF, with 40 days difference, this could be an issue if we want to avoid the failure. 
 
@@ -298,7 +298,7 @@ If we take the mode of distribution as the inspection time we have the following
 
 
 
-# Seond Boostrap 
+# Second Boostrap 
 
 We check now if we can enhanced the distribution using **bootstrap**, which will give use a family of devices **mtbf**, the bootstrap is done with 500 samples, in this case we can wonder about the zero occurrence in the original data set. We can notice that the shape of the **bootstrap** is different from the original. 
 
