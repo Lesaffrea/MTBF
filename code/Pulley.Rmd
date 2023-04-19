@@ -116,7 +116,7 @@ bearing_data_set <-one_failure_data |>
                         dplyr::filter(simplified_failure_mode == "Bearing Failure" )
 ```
 
-We have a big spread for the three types of failure, The main challenge will be how do we want to use the analysis. Taking the bearing as example the model is in the bin between zero and two hundred days. What is surprising is failure less than 500 days for bearing, in this case we have about 25 failures or 10% of the total bearing failures. This short time could be justify if we have bearing with a certina number of days, as mentioned by **SKF** bearing have a long life time and do not failed so often. 
+We have a big spread for the three types of failure, The main challenge will be how do we want to use the analysis. Taking the bearing as example the model is in the bin between zero and two hundred days. What is surprising is failure less than 500 days for bearing, in this case we have about 25 failures or 10% of the total bearing failures. This short time could be justify if we have bearing with a certain number of days, as mentioned by **SKF** bearing have a long life time and do not failed so often. 
 
 ```{r bearing_200, echo=FALSE}
 less_200 <-bearing_data_set |> dplyr::filter( failure_time < 200)
