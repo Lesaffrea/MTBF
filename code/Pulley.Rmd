@@ -76,7 +76,7 @@ We have ```r nrow(one_failure_data)``` functional locations with one error , whi
 The failure mode for those functional areas are as follow, we can see that we have two main type of failures bearing and belt lagging.  The rule of sum is to have thirteen failures to build statistics, we shall select bearing, lagging and shaft.
 
 ```{r failure_mode_1, echo=FALSE}
-table(one_failure_data$simplified_failure_mode)
+knitr::kable(table(one_failure_data$simplified_failure_mode))
 ```
 
 The distribution for the three failure modes are as follow.
