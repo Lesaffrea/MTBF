@@ -39,7 +39,7 @@ In this document, we explore the **MTBF** based on a data set from **Rio**. The 
 
 The previous formula is a simple definition, other mentioned MTBF as the arithmetic value of reliability function R(t), which can be expressed as the *expected value of the density function f(t)* or $$ MTBF \space  = \space \int_{0}^{\infty} tf(t)dt \\ Density \space f(t) = \lambda e^{-\lambda t} $$
 
-Usually the MTBF is express in hours, which is not the current case, the distribution used is often the **weinbull**, that we use below.  
+Usually the MTBF is express in hours, which is not the current case, the distribution used is often the **weinbull**, that has to be used with **MLE**, as done below. 
 
 To build this document, the **SKF** document **Bearing damage and failure analysis** has been  used. 
 
@@ -55,7 +55,7 @@ For information the bearings failures, which are exceptional as most bearings li
  
  Before to go further the definition of the MTBF is worst to mentioned, that we use the number of failures to repair in a period of time, which is an arithmetic mean, we compare with the density and raise some question as we have a lower value using the density.  
  
- We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are mulimodal, the MTBF is taken as the lowest model of the distribution. 
+ We do two calculations for two functional locations concerning the distribution MTBF, the distribution in this case are multimodal, the MTBF is taken as the lowest model of the distribution. 
  
  **One point**, it has been difficult to extract the distribution of failure in bearings, and some censuring have been applied in some cases. 
  
@@ -83,7 +83,9 @@ one_material <- output_data %>%
 
 ```
 
-The distribution for the failure for the  floc **3021BRC501C503ELEM.PULL.TAPU** are as follow, we have a bimodal distribution here. One should be careful as the number of sample could be low, in case of *lagging* we have only few samples, therefor some enhancement such as *bootstrap* must be used. 
+The distribution of the failures for the  floc **3021BRC501C503ELEM.PULL.TAPU** are as follow, we have a bimodal distribution here. One should be careful as the number of sample is low, in case of *lagging* we have only few samples, therefor some enhancement such as *bootstrap* must be used. 
+
+We can notice a differences between the bearing  failure and lagging failure, what is surprising is the failures happening around thousand days. It seems that the bearings or the belts have changed. 
 
 ```{r dsp_dist,echo=FALSE, warning=FALSE, message=FALSE,fig.align="center"}
 dsp_all <- ggplot(data=one_material) +
@@ -122,7 +124,7 @@ hist(as.numeric(one_material$day_bet_failure),
 non_zero_failure = one_material$day_bet_failure[as.numeric(one_material$day_bet_failure) !=0]
 ```
 
-The non zero distribution is as follow, 
+The non zero distribution is as follow, still the maximum of the failures happen in less than 200 days. 
 
 ```{r dsp_non_zaro, echo=FALSE}
 hist(as.numeric(non_zero_failure), 
@@ -131,7 +133,7 @@ hist(as.numeric(non_zero_failure),
      main="Floc 3021BRC501C503ELEM.PULL.TAPU") 
 ```
 
-In the next lines we do a bootstrap on the number of days, we should not have a lot of difference with the orignal data as we have ```r nrow(one_material)``` samples. We calculate the confidence interval on the boostrap as we have a normal distribution in this case. The CI is pretty small. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population. In this case the mean will be of 134 instead of 133 for the subset, which is closer to the mode as shown below. 
+In the next lines we do a bootstrap on the time to failure, we should not have a lot of difference with the original data as we have ```r nrow(one_material)``` samples. We calculate the confidence interval on the bootstrap as we have a normal distribution in this case. The CI is pretty small. The following visual is a bootstrap of the subset and therefore give the standard deviation for the population. In this case the mean will be of 134 instead of 133 for the subset, which is closer to the mode as shown below. 
 
 ```{r dsp_Exp, echo=FALSE}
 fact <- function( no ) {
@@ -160,13 +162,13 @@ mtbf<-round(((one_material$scheduled_start[19] - one_material$scheduled_start[1]
 delta_mtbf_dist <-mean(boot_mean$t$mean) -mtbf
 ```
 
-If we do calculate the original MTBF for  the functional location we have a value of ```r round(((one_material$scheduled_start[19] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has ne greatv. values as we are multimodal. 
+If we do calculate the original MTBF for the functional location we have a value of ```r round(((one_material$scheduled_start[19] - one_material$scheduled_start[1])/ nrow(one_material))[1],3)``` days. We have a difference of ```r as.numeric(delta_mtbf_dist)``` days if we take the bootstrap distribution rather than the mtbf as calculated with formula, this value has a greater values. 
 
 The margin of error for the bootstrap mean is small and less than 1, to be exact ```r (sd(boot_mean$t$mean)/sqrt(1000))*1.96``` for 95% or Z score at 1.96. This CI bring us in the range of the sample which is close to the population it seems. 
 
 ## Checking by material 
 
-The following visual shows the distribution of time between failaure, we can notice the first modes are similar. The material 07187 has a long time betwwen failure at the extrem, using the calculated MTBF will therefore have a values lot higher that the first mode. 
+The following visual shows the distribution of time between failure, we can notice the first modes are similar. The material **07187** has a long time between failure at the extreme, using the calculated MTBF will therefore have a values lot higher that the first mode. 
 
 ```{r metrail_mtbf, echo=FALSE, message=FALSE}
 functional_3016 <- one_material |>
@@ -195,7 +197,7 @@ tmp_observe.dat <- functional_3016 |>
                         dplyr::mutate( time =as.integer(time))
 ```
 
-For both material the time to failure is as follow, with no right censure. 
+For both materials the time to failure is as follow, with no right censure. 
 
 ```{r dsptime, echo=FALSE}
 Plot.Observations(tmp_observe.dat)
@@ -210,9 +212,9 @@ As we can see with the second material the difference between MTBF and mode is l
 | ```r mode_functional_3016$material_description[1]``` | ```r round(mode_functional_3016$mode[[1]][1],2)``` | ```r round(mode_functional_3016$mtbf[1],2) ```|
 | ```r mode_functional_3016$material_description[2]``` | ```r round(mode_functional_3016$mode[[2]][1],2)``` | ```r round(mode_functional_3016$mtbf[2],2) ```|
 
-In case of the first material, we could cenored the extrem, and then do a calculation with Weibull, which will give us the reliability that we can transform in MTBF. 
+In case of the first material, we could censored the extremes, and then do a calculation with Weinbull, which will give us the reliability that we can transform in **MTBF**. 
 
-The **weibull** distribution is usually used in reliability, the method is different than the expectation for MTBF. We build a model with both materials in this case. 
+The **weinbull** distribution is usually used in reliability, the method is different than the expectation for MTBF. We build a model with both materials in this case. 
 
 
 ```{r weibull_model, echo=FALSE}

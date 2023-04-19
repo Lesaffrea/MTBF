@@ -1,6 +1,8 @@
 
 # R.J. Marriott. 29 June 2016. (Version 2.0)
 
+library(assert)
+
 ##################
 
 # Calculate probability of failure:
@@ -178,6 +180,7 @@ Plot.Observations <- function(reliability.data,Ntotal=-999){
 
 Calculate.Fhat <- function(reliability.data){
   # reliability.data has columns "time" and "event"={1,0}
+  browser()
   dat1 <- reliability.data
   n <- nrow(dat1)
   dat1$suspensions <- 1 - dat1$event
@@ -201,6 +204,11 @@ Calculate.Fhat <- function(reliability.data){
   return(dat3)
 }
 
+#
+#  Calculate.a_b 
+#
+#
+#
 Calculate.a_b <- function(reliability.data){
   # reliability.data has columns "time" and "event"={1,0}
   dat1 <- reliability.data
@@ -224,9 +232,16 @@ Calculate.a_b <- function(reliability.data){
   for(i in 2:m){
     dat2$sigmahat[i] <- n * cumsum.sigma[i-1]
   }
+  #  Add by Alain .. check why 
+  if(  dat2$sigmahat[2] < 0 ){
+       dat2$sigmahat <- dat2$sigmahat * -1 
+  }
+  
   dat2$Khat <- dat2$sigmahat / (1 + dat2$sigmahat)
   dat3 <- dat2[,colnames(dat2) %in% c("time","sigmahat","Khat") == T]
   dat4 <- dat3[dat3$Khat > 0 & dat3$Khat <1, ] # Can't be zero or 1.
+  # We could have an error
+  assert( nrow(dat4) > 1)
   a <- min(dat4$Khat); b <- max(dat4$Khat)
   result <- list(a=a, b=b)
   return(result)
@@ -506,6 +521,7 @@ Probability.Plots <- function(reliability.data, gridlines=F, label.individual.ax
   else if(dist=="Weibull"){
     par(mar= c(5, 5, 4, 1) + 0.1,font.lab=2,cex.axis=0.8,cex.lab=1.1,
         cex.main=1.3)
+    browser()
     Weibull.probability.plot(Fhat$time,Fhat$Fhat,gridlines,T)
     add95CIs.Weibull(simult.CLs)
   }
