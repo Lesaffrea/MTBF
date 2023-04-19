@@ -30,7 +30,7 @@ output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/
 
 # Summary
 
-This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean. In this document we shall try to pulley **Weinbull* with two parameters, 
+This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean. In this document we shall try to pulley **Weinbull** with two parameters, 
 
 # Data set
 
@@ -62,6 +62,7 @@ ggplot( data = data_set) +
         x="Number of days")
 
 ```
+
 The distribution of failure is from one to seventy seven per functional location, the low number have to be group per materail type and failure mode. 
 
 # The functional location with one failure 
