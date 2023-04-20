@@ -24,6 +24,8 @@ library(ggridges)
 library(hrbrthemes)
 library(gridExtra)
 library(SPREDA)
+library(tm)
+library(comparator)
 library(readxl)
 output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/Pulley output.table.xlsx")))
 ```
@@ -63,7 +65,23 @@ ggplot( data = data_set) +
 
 ```
 
-The distribution of failure is from one to seventy seven per functional location, the low number have to be group per materail type and failure mode. 
+The distribution of failure is from one to seventy seven per functional location, the low number have to be group per material type and failure mode. 
+
+## Analysing failures
+
+We shall need more attributes per failure, in this case we check the variable description. The distances used:
+
+1. Monge Elkan 
+
+
+```{r distance_description, echo=FALSE}
+all_description <-output_data |>
+                    dplyr::select(order, description)
+all_description <- all_description |>
+                      dplyr::mutate( tokens = strsplit(description, '\\s+'))
+
+```
+
 
 # The functional location with one failure 
 ```{r one_filure, echo=FALSE}
@@ -121,6 +139,31 @@ We have a big spread for the three types of failure, The main challenge will be 
 ```{r bearing_200, echo=FALSE}
 less_200 <-bearing_data_set |> dplyr::filter( failure_time < 200)
 hist(less_200$failure_time, col="blue", main="Bearing failures less than 200 days", xlab="Number days")
+```
+
+## Check with material description
+
+The material description for **floc** with one failure, The material description defines the technical specification of the device, it is a category. We show the distribution of the mean time based on the material type, we ca notice the spread on the time. 
+
+```{r one_meterial, echo=FALSE}
+bearing_material <-bearing_data_set  |> 
+                      dplyr::ungroup() |>
+                      dplyr::group_by( material_description ) |>
+                      dplyr::mutate( number_devices = n()) |>
+                      dplyr::summarise( mean_time = mean(failure_time),
+                                        median_time = median(failure_time))
+hist(bearing_material$median_time, col="blue", main="Time to failure by material type for bearing", xlab="Time")
+```
+The low time between failure, which is between zero and and less than 50 mean and median are as follow. 
+
+```{r materail_def, echo=FALSE}
+knitr::kable(bearing_material$material_description[ bearing_material$mean_time <50])
+```
+
+The same but for device with mean time greater tan 4000 days.
+
+```{r dsphigh, echo=FALSE}
+knitr::kable(bearing_material$material_description[ bearing_material$mean_time > 4000])
 ```
 
 
