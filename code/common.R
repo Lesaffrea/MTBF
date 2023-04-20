@@ -11,7 +11,7 @@ library(comparator)
 #
 # input:  a vector of list where each list is a set of token 
 #
-# ouptut: squre matrix with the Monge Elkan distance 
+# ouptut: square matrix with the Monge Elkan distance 
 #
 distance <-function( vector, distance= NULL){
   assert::assert(class(vector) == "list")
