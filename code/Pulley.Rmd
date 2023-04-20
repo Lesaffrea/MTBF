@@ -156,6 +156,7 @@ bearing_material <-bearing_data_set  |>
                                         median_time = median(failure_time))
 hist(bearing_material$median_time, col="blue", main="Time to failure by material type for bearing", xlab="Time")
 ```
+
 The low time between failure, which is between zero and and less than 50 mean and median are as follow. We have 13 devices with a time to failure less than 50 days, 
 
 ```{r materail_def, echo=FALSE}
