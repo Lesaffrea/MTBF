@@ -195,10 +195,17 @@ The same but for device with mean time greater than 4000 days, those material nu
 
 ```{r dsphigh, echo=FALSE}
 knitr::kable(bearing_material[ bearing_material$mean_time > 4000, c("material_description", "mean_time")])
-check_size <- bearing_material |>
+check_size <- bearing_data_set |>
                   dplyr::filter( material_description %in%  bearing_material$material_description[bearing_material$mean_time > 4000])
 
 ```
+
+The pulley category as follow, we do not have *snub* or *bend* in this sample. 
+
+```{r pulley_cat, echo=FALSE}
+knitr::kable(table(check_size$pulley_category))
+```
+
 
 ## Analysis more than one device 
 
