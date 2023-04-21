@@ -35,7 +35,7 @@ output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/
 
 This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean.  The issue we face is the low amount of failures for some **floc**, we then check the technical specification of the device.
 
-It appears than we can not build MTBF for those installed devices as we have to much variations in time to failure, the context must be add to the device type. 
+It appears than we can not build MTBF for those installed devices as we have to much variations in time to failure, the context must be add to the device type, such factor as the contamination factor should be consider as well as the max load apply, we do not have those values in the data set (see ISO 281 for details).
 
 # Data set
 
@@ -236,6 +236,33 @@ Build four failure categories <100, 100 to 500, 500 to 2000 and more than 2000 d
 ```{r table_exception, echo=FALSE}
 knitr::kable(table(example_device$bin_time))
 ```
+
+### Evaluating one contamination factor
+
+This chapter should be taken with  a pitch of salt, as we try to figure out a contamination factor, ignoring the variation in load. The basic rating life is taken as the maximum in this case 3451 days, we exclude from the data set the bearing with less than 85 days of time between failure.
+
+```{r dsp_failure, echo=FALSE}
+example_device_85<- example_device$failure_time[example_device$failure_time  >85]
+value_device <- sort(example_device_85)
+step <- (value_device[length(example_device_85)] - value_device[1]) / (length(example_device_85) -1)
+line <-numeric(length(value_device))
+line[1] <-value_device[1]
+for(index in 2:(length(example_device_85) -1)){
+    line[index] <-step * (index-1) + value_device[1]
+}
+line[length(value_device)]  <-value_device[length(value_device)]
+dps_time <- data.frame( time= value_device,
+                        ref = line)
+dps_time$index <-seq(1, nrow(dps_time), 1)
+
+ggplot( data= dps_time, aes( x=index))+
+  geom_line( aes(y= time), col="orange")+
+  geom_line( aes(y= ref), col="blue") +
+  theme_minimal()+
+  labs( title="Time to failure for PULLEY,BEND;C/W BRGS;C001/3/7")
+
+```
+
 
 
 
