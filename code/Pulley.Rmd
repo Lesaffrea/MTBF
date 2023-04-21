@@ -223,7 +223,8 @@ As example, for the device **PULLEY,BEND;C/W BRGSC001/3/7** which has a mean of 
 ```{r example_device, echo=FALSE}
 hist(example_device$failure_time, col="blue", main="Material PULLEY,BEND;C/W BRGSC001/3/7 time to failure", xlab="Number days")
 ```
-Build four time to failure category <100, 100 to 500, 500 to 2000 and more than 2000 days to failure we have have the following. The bulk is between 500 days a and 2000 days which is a a wide range. 
+
+Build four failure categories <100, 100 to 500, 500 to 2000 and more than 2000 days to failure we have have the following. The bulk is between 500 days a and 2000 days which is a a wide range. 
 
 ```{r table_exception, echo=FALSE}
 knitr::kable(table(example_device$bin_time))
