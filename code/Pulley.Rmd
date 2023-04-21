@@ -33,7 +33,9 @@ output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/
 
 # Summary
 
-This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean. In this document we shall try pulley with **Weinbull** and two parameters, The issue we face is the low amount of failures for some **floc**, we then check the technical specificatio of the device. 
+This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean.  The issue we face is the low amount of failures for some **floc**, we then check the technical specification of the device.
+
+It appears than we can not build MTBF for those installed devices as we have to much variations in time to failure, the context must be add to the device type. 
 
 # Data set
 
@@ -145,7 +147,7 @@ hist(less_200$failure_time, col="blue", main="Bearing failures less than 200 day
 
 ## Check with material description
 
-The material description for **floc** with one failure, The material description defines the technical specification of the device, it is a category. We show the distribution of the mean time based on the material type, we ca notice the spread on the time. 
+We work with  material description for **floc** with one failure, The material description defines the technical specification of the device, it is a category. We show the distribution of the mean time based on the material type, we ca notice the spread on the time as well as a deceasing exponential, with most failing before 500 days. 
 
 ```{r one_meterial, echo=FALSE}
 bearing_material <-bearing_data_set  |> 
@@ -153,7 +155,8 @@ bearing_material <-bearing_data_set  |>
                       dplyr::group_by( material_description ) |>
                       dplyr::mutate( number_devices = n()) |>
                       dplyr::summarise( mean_time = mean(failure_time),
-                                        median_time = median(failure_time))
+                                        median_time = median(failure_time),
+                                        number_device = mean(number_devices))
 hist(bearing_material$median_time, col="blue", main="Time to failure by material type for bearing", xlab="Time")
 ```
 
@@ -163,16 +166,17 @@ The low time between failure, which is between zero and and less than 50 mean an
 knitr::kable(bearing_material$material_description[ bearing_material$mean_time <50])
 ```
 
-With this data set we have a MTBF of about ```r round(mean(bearing_material$mean_time[bearing_material$mean_time <50]),2)```, but standard deviation of ```r round(sd(bearing_material$mean_time[bearing_material$mean_time <50]),2)```, which show that for the duration less than 50 days we can not deliver reliable MTBF. The sample consider of of thirteen.
+With this data set we have a MTBF of about ```r round(mean(bearing_material$mean_time[bearing_material$mean_time <50]),2)```, but standard deviation of ```r round(sd(bearing_material$mean_time[bearing_material$mean_time <50]),2)```, which show that for the duration less than 50 days we can not deliver reliable MTBF. The sample consider is of thirteen samples *acceptable size for statistics*.
 
-We analyse the devices with a failures greater or equal to twenty and less than fifty days, as we have gap between eight and twenty days in previous sample.
+We analyse the devices with a failures greater or equal to twenty and less than fifty days, as we have gap between eight and twenty days in previous sample, we should not consider the bearing for those small values. 
 
 ```{r baering_20_50, echo=FALSE}
 bearing_20_50 <-bearing_material[bearing_material$mean_time >= 20  & bearing_material$mean_time < 50,]
 knitr::kable( bearing_20_50[,c("material_description", "mean_time")])
 ```
 
-The distribution for those devices is as follow, we still have a standard deviation of eight, which mean the lower extrem is as 12 days, which make inspection quite often. If the failure was recurring if will be perhaps better to change. 
+The distribution for those devices is as follow, the distribution is quite unusual, but we use kernel here, the other point we deal with intermittent data, therefore a type such as **Cruston** will define the distribution and able to generate of forecast, the forecast will predict on the whole but not for a particular device. 
+We still have a standard deviation of eight, which mean the lower extreme is as 12 days, which make inspection quite often. If the failure was recurring if will be perhaps better to change bearings. 
 
 ```{r dsp20_50, echo=FALSE, warning=FALSE}
 sd_20_50 <-sd(bearing_20_50$mean_time)
@@ -185,12 +189,47 @@ ggplot( data= bearing_20_50) +
   labs( title="For devices between 20 and 50 days")
 ```
 
-# High failure time
+## High failure time for one sample
 
-The same but for device with mean time greater tan 4000 days.
+The same but for device with mean time greater than 4000 days, those material number are unique over all the the bearing data set. 
 
 ```{r dsphigh, echo=FALSE}
-knitr::kable(bearing_material$material_description[ bearing_material$mean_time > 4000])
+knitr::kable(bearing_material[ bearing_material$mean_time > 4000, c("material_description", "mean_time")])
+check_size <- bearing_material |>
+                  dplyr::filter( material_description %in%  bearing_material$material_description[bearing_material$mean_time > 4000])
+
 ```
+
+## Analysis more than one device 
+
+```{r more_one, echo=FALSE}
+more_one_device <-bearing_material  |>
+                        dplyr::filter( number_device > 1) |>
+                        dplyr::mutate( delta = median_time - mean_time)
+
+example_device <-data_set[data_set$material_description == "PULLEY,BEND;C/W BRGS;C001/3/7",]
+example_device <-example_device |>
+                      dplyr::mutate( bin_time = cut(failure_time, breaks=c(0,100,500,2000, 3500), include.lowest = TRUE))
+```
+
+In this sample, we have same devices with significant difference in time to failure. It means we have conditions, which will reduce the time to failure in this case. It appears that we have few exceptions with low time to failures, which must be analysed.
+
+What is a surprise is the spread of time to failures, concerning the same material description, as shown below we could have more than 2000 days difference in time to failure for the same material description. 
+
+### Analysis same materail description
+
+As example, for the device **PULLEY,BEND;C/W BRGSC001/3/7** which has a mean of 693 days and median of 2 days, for the whole data set, that is ```r nrow(example_device)``` samples, the histogram shows the distribution.
+
+```{r example_device, echo=FALSE}
+hist(example_device$failure_time, col="blue", main="Material PULLEY,BEND;C/W BRGSC001/3/7 time to failure", xlab="Number days")
+```
+Build four time to failure category <100, 100 to 500, 500 to 2000 and more than 2000 days to failure we have have the following. The bulk is between 500 days a and 2000 days which is a a wide range. 
+
+```{r table_exception, echo=FALSE}
+knitr::kable(table(example_device$bin_time))
+```
+
+
+
 
 
