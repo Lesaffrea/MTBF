@@ -1,6 +1,6 @@
 # MTBF
 
-This project is an exploration of the MTBF. It seems more difficult than thought to come with population results, the contaxt plays a big role it seems in the duration of time between failures.
+This project is an exploration of the MTBF. It seems more difficult than thought to come with population results, the context plays a big role it seems in the duration of time between failures.
 
 # Data set
 
