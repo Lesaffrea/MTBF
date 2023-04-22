@@ -210,16 +210,28 @@ knitr::kable(table(check_size$pulley_category))
 ## Analysis more than one device 
 
 ```{r more_one, echo=FALSE}
+material_data_set <- output_data |> dplyr::group_by(functional_location, material_description) |>
+                           dplyr::mutate( scheduled_start = as.Date(  scheduled_start,"%d-%m-%Y" , tz ="UTC")) |>
+                           dplyr::arrange( scheduled_start, .by_group = TRUE) |>
+                           dplyr::mutate( start_time  = dplyr::lag(scheduled_start) ,
+                                          failure_time = scheduled_start - start_time ) |>
+                           dplyr::filter( !is.na( failure_time) ) |>
+                           dplyr::filter( failure_time > 0 ) |>
+                           dplyr::mutate( failure_time = as.integer(failure_time),
+                                          size_sample = n())
+
+
+# keep not nedeed
 more_one_device <-bearing_material  |>
                         dplyr::filter( number_device > 1) |>
                         dplyr::mutate( delta = median_time - mean_time)
 
-example_device <-data_set[data_set$material_description == "PULLEY,BEND;C/W BRGS;C001/3/7",]
+example_device <-material_data_set[material_data_set$material_description == "PULLEY,BEND;C/W BRGS;C001/3/7",]
 example_device <-example_device |>
                       dplyr::mutate( bin_time = cut(failure_time, breaks=c(0,100,500,2000, 3500), include.lowest = TRUE))
 ```
 
-In this sample, we have same devices with significant difference in time to failure. It means we have conditions, which will reduce the time to failure in this case. It appears that we have few exceptions with low time to failures, which must be analysed.
+In this sample rebuilt with slection of materail description, we have same devices with significant difference in time to failure. It means we have conditions, which will reduce the time to failure in this case. It appears that we have few exceptions with low time to failures, which must be analysed.
 
 What is a surprise is the spread of time to failures, concerning the same material description, as shown below we could have more than 2000 days difference in time to failure for the same material description. 
 
@@ -260,8 +272,25 @@ ggplot( data= dps_time, aes( x=index))+
   geom_line( aes(y= ref), col="blue") +
   theme_minimal()+
   labs( title="Time to failure for PULLEY,BEND;C/W BRGS;C001/3/7")
-
+# we claculate the contamination factor 
+to_check <-value_device[-length(value_device)]
+Beta <-numeric(length(to_check))
+for( index in length(to_check):1){
+        Beta[index] <-to_check[index] / value_device[length(value_device)]
+}
+Beta[length(to_check)+1 ] <-1
+dps_time$coef <-Beta
 ```
+
+
+We calculate the coefficient of contamination as mentioned, which are, those value have to be adjust with time:
+
+```{r coef_dsp, echo=FALSE}
+knitr::kable( dps_time |> dplyr::select(-index))
+```
+
+
+
 
 
 
