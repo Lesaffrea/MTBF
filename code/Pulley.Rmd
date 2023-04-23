@@ -27,6 +27,9 @@ library(SPREDA)
 library(tm)
 library(comparator)
 library(readxl)
+library(xgboost)
+library(caret) 
+library(Ckmeans.1d.dp) # for xgb.ggplot.importance
 source("./common.R")
 output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/Pulley output.table.xlsx")))
 ```
@@ -36,6 +39,8 @@ output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/
 This document analyses the pulley failure, by failure we mean **MTBF**, using distribution instead of the geometric mean.  The issue we face is the low amount of failures for some **floc**, we then check the technical specification of the device.
 
 It appears than we can not build MTBF for those installed devices as we have to much variations in time to failure, the context must be add to the device type, such factor as the contamination factor should be consider as well as the max load apply, we do not have those values in the data set (see ISO 281 for details).
+
+The last part of thios document, we use gradient decsnt to to a prediction on multiclasses on the full dataset, even if we use a hierarchical method the results are pretty interesting. 
 
 # Data set
 
@@ -289,6 +294,61 @@ We calculate the coefficient of contamination as mentioned, which are, those val
 knitr::kable( dps_time |> dplyr::select(-index))
 ```
 
+This device is across multiple functional location and but same plant, the functional loacation are as follow, we can notice the difference in time to failure inside a functional location, which add a complication. 
+
+```{r dspLOcation, echo=FAL(SE}
+knitr::kable(example_device[, c("functional_location", "failure_time", "pulley_category", "description")])
+```
+
+# Considering the full data set 
+
+We make the hypothesis that the environment influence the time between failure, therefore we have a factor to difine to do so we consider the full data set with bins. One challenge is the number of functional location of more than 1500. 
+
+```{r full, echo=FALSE}
+
+material_data_set <- material_data_set |> 
+         dplyr::mutate( bin_time = cut(failure_time, breaks=c(0,100,500,2000, 3500), include.lowest = TRUE)) |>
+         dplyr::mutate( bin_num = as.integer(bin_time)) |>
+         dplyr::filter(!is.na(bin_num))
+
+# This table is difficult to interpret due to size
+contingency_all_material <-xtabs( bin_num ~ pulley_category+ functional_location, data = material_data_set)
+
+xg_data <- material_data_set |> 
+                   dplyr::mutate( pulley_category = as.integer(factor(pulley_category)),
+                                  functional_location = as.integer(factor(functional_location))) |>
+                   dplyr::select(pulley_category, functional_location )
+xg_label <-  material_data_set$bin_time
+
+train_xgboost <-xgb.DMatrix(data = as.matrix(xg_data),   label = xg_label)
+param   <- list(max_depth = 2, eta = 1, verbose = 0, nthread = 2)
+model  <-xgb.train( param, train_xgboost, nrounds = 40 )
+verify <-predict(model, newdata = train_xgboost)
+#. We use the results of the first model to build a second model
+xg_data$full_predict <- verify
+xg_data$delta_preduct <- verify - as.integer(xg_label)
+train_xgboost <-xgb.DMatrix(data = as.matrix(xg_data),   label = xg_label)
+model_2  <-xgb.train( param, train_xgboost, nrounds = 40 )
+verify_2 <-predict(model_2, newdata = train_xgboost)
+names_var <-names(xg_data)
+# The variable of importance
+importance_matrix = xgb.importance(feature_names= names_var, model = model_2)
+xgb.ggplot.importance(importance_matrix) +
+        theme_minimal()
+# We recalibrate the second predict
+delta_2 <- as.integer(xg_label) - as.numeric(verify_2)
+recalibrate_verify_2  <-ifelse( delta_2 < 0 , verify_2 + delta_2, ifelse( delta_2 > 0, verify_2+ delta_2, verify_2))
+```
+
+We have a prediction on numaric and therefore we recalibrate, the confusion is a sbelow, we certainly overfir in this case, but we show that we can have a pretty good prediction on class of time to failure. 
+
+```{r cobnfusion_matrix, echo=FALSE}
+# We show the results
+confusionMatrix(factor(recalibrate_verify_2),
+                factor( as.integer(xg_label)),
+                mode = "everything")
+```
+        
 
 
 
