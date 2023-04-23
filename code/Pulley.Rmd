@@ -258,7 +258,7 @@ knitr::kable(table(example_device$bin_time))
 
 This chapter should be taken with  a pitch of salt, as we try to figure out a contamination factor, ignoring the variation in load. The basic rating life is taken as the maximum in this case 3451 days, we exclude from the data set the bearing with less than 85 days of time between failure.
 
-```{r dsp_failure, echo=FALSE}
+```{r dsp_failure_2, echo=FALSE}
 example_device_85<- example_device$failure_time[example_device$failure_time  >85]
 value_device <- sort(example_device_85)
 step <- (value_device[length(example_device_85)] - value_device[1]) / (length(example_device_85) -1)
@@ -296,7 +296,7 @@ knitr::kable( dps_time |> dplyr::select(-index))
 
 This device is across multiple functional location and but same plant, the functional loacation are as follow, we can notice the difference in time to failure inside a functional location, which add a complication. 
 
-```{r dspLOcation, echo=FAL(SE}
+```{r dsp_Location, echo=FALSE}
 knitr::kable(example_device[, c("functional_location", "failure_time", "pulley_category", "description")])
 ```
 
@@ -304,9 +304,9 @@ knitr::kable(example_device[, c("functional_location", "failure_time", "pulley_c
 
 We make the hypothesis that the environment influence the time between failure, therefore we have a factor to difine to do so we consider the full data set with bins. One challenge is the number of functional location of more than 1500. 
 
-```{r full, echo=FALSE}
-
+```{r full, echo=FALSE, warning=FALSE}
 material_data_set <- material_data_set |> 
+         dplyr::ungroup() |>  # Remove grouping on material_description
          dplyr::mutate( bin_time = cut(failure_time, breaks=c(0,100,500,2000, 3500), include.lowest = TRUE)) |>
          dplyr::mutate( bin_num = as.integer(bin_time)) |>
          dplyr::filter(!is.na(bin_num))
@@ -321,14 +321,14 @@ xg_data <- material_data_set |>
 xg_label <-  material_data_set$bin_time
 
 train_xgboost <-xgb.DMatrix(data = as.matrix(xg_data),   label = xg_label)
-param   <- list(max_depth = 2, eta = 1, verbose = 0, nthread = 2)
+param   <- list(max_depth = 4, eta = 1,  nthread = 2)
 model  <-xgb.train( param, train_xgboost, nrounds = 40 )
 verify <-predict(model, newdata = train_xgboost)
 #. We use the results of the first model to build a second model
 xg_data$full_predict <- verify
 xg_data$delta_preduct <- verify - as.integer(xg_label)
 train_xgboost <-xgb.DMatrix(data = as.matrix(xg_data),   label = xg_label)
-model_2  <-xgb.train( param, train_xgboost, nrounds = 40 )
+model_2  <-xgb.train( param, train_xgboost, nrounds = 50 )
 verify_2 <-predict(model_2, newdata = train_xgboost)
 names_var <-names(xg_data)
 # The variable of importance
@@ -350,6 +350,61 @@ confusionMatrix(factor(recalibrate_verify_2),
 ```
         
 
+## Building an universal model
+
+The prevois chapter does not use a test set, in this section we shall use a training set made of .9 of the initial data set and a test set. We do not manage without rebuilding models as shown below.
+
+```{r final_model, echo=FALSE,warning=FALSE, message=FALSE}
+set.seed(998)
+inTraining <- createDataPartition(material_data_set$bin_time, p = .9, list = FALSE)
+training <- material_data_set[ inTraining,]
+testing  <- material_data_set[-inTraining,]
+# training 
+xg_training <- training |> 
+                   dplyr::mutate( pulley_category = as.integer(factor(pulley_category)),
+                                  functional_location = as.integer(factor(functional_location))) |>
+                   dplyr::select(pulley_category, functional_location )
+
+xg_label <-  training$bin_time
+train_xgboost <-xgb.DMatrix(data = as.matrix(xg_training),   label = xg_label)
+param   <- list(max_depth = 4, eta = .3,  nthread = 2)
+model_3  <-xgb.train( param, train_xgboost, nrounds = 50 )
+verify   <-predict(model_3, newdata = train_xgboost)
+xg_training$full_predict <- verify
+xg_training$delta_1      <- verify -1 
+xg_training$delta_2      <- verify -2 
+xg_training$delta_3      <- verify -3 
+xg_training$delta_4      <- verify -4 
+train_xgboost_2 <-xgb.DMatrix(data = as.matrix(xg_training),   label = xg_label)
+model_4  <-xgb.train( param, train_xgboost_2, nrounds = 50 )
+verify_4 <-predict(model_4, newdata = train_xgboost_2)
+delta_4 <- as.integer(xg_label) - as.numeric(verify_4)
+# just check
+recalibrate_verify_4  <-ifelse( delta_4 < 0 , verify_4 + delta_4, ifelse( delta_4 > 0, verify_4+ delta_4, verify_4))
+# End of training 
+
+xg_testing <- testing |> 
+                   dplyr::mutate( pulley_category = as.integer(factor(pulley_category)),
+                                  functional_location = as.integer(factor(functional_location))) |>
+                   dplyr::select(pulley_category, functional_location )
+xg_label <-  testing$bin_time
+testing_xgboost <-xgb.DMatrix(data = as.matrix(xg_testing),   label = xg_label)
+testing_predict <-predict(model_3, newdata = testing_xgboost)
+xg_testing$full_predict <- testing_predict
+xg_testing$delta_1      <- testing_predict -1 
+xg_testing$delta_2      <- testing_predict -2 
+xg_testing$delta_3      <- testing_predict -3 
+xg_testing$delta_4      <- testing_predict -4
+testing_xgboost_2 <-xgb.DMatrix(data = as.matrix(xg_testing),   label = xg_label)
+testing_predict_2 <-predict(model_4, newdata = testing_xgboost_2)
+#'
+decimal_predict <- testing_predict_2 - floor(testing_predict_2)
+testing_predict_end <-ifelse( decimal_predict  > .5, floor(testing_predict_2)+1 , floor(testing_predict_2))
+
+confusionMatrix(factor(testing_predict_end),
+                factor( as.integer(xg_label)),
+                mode = "everything")
+```
 
 
 
