@@ -29,6 +29,8 @@ library(comparator)
 library(readxl)
 library(xgboost)
 library(caret) 
+library(rpart)
+library(caretEnsemble)
 library(Ckmeans.1d.dp) # for xgb.ggplot.importance
 source("./common.R")
 output_data <-janitor::clean_names(read_xlsx(stringr::str_c(here::here(),"/data/Pulley output.table.xlsx")))
@@ -352,20 +354,25 @@ confusionMatrix(factor(recalibrate_verify_2),
 
 ## Building an universal model
 
-The prevois chapter does not use a test set, in this section we shall use a training set made of .9 of the initial data set and a test set. We do not manage without rebuilding models as shown below.
+The previous chapter does not use a test set, in this section we shall use a training set made of .9 of the initial data set and a test set. We do not manage without rebuilding models as shown below, we use a tree method and therefor the model could change drastically with few data changes as it is the case here
 
 ```{r final_model, echo=FALSE,warning=FALSE, message=FALSE}
 set.seed(998)
-inTraining <- createDataPartition(material_data_set$bin_time, p = .9, list = FALSE)
-training <- material_data_set[ inTraining,]
-testing  <- material_data_set[-inTraining,]
-# training 
-xg_training <- training |> 
-                   dplyr::mutate( pulley_category = as.integer(factor(pulley_category)),
+material_data <- material_data_set |>
+                     dplyr::mutate( pulley_category = as.integer(factor(pulley_category)),
                                   functional_location = as.integer(factor(functional_location))) |>
-                   dplyr::select(pulley_category, functional_location )
+                     dplyr::select(pulley_category, functional_location , bin_time)
+        
+        
+        
+inTraining <- createDataPartition(material_data$bin_time, p = .9, list = FALSE)
+training <- material_data[ inTraining,]
+testing  <- material_data[-inTraining,]
 
-xg_label <-  training$bin_time
+# training 
+xg_training <- training  |> 
+                   dplyr::select( -bin_time )
+xg_label    <-  training$bin_time
 train_xgboost <-xgb.DMatrix(data = as.matrix(xg_training),   label = xg_label)
 param   <- list(max_depth = 4, eta = .3,  nthread = 2)
 model_3  <-xgb.train( param, train_xgboost, nrounds = 50 )
@@ -382,12 +389,10 @@ delta_4 <- as.integer(xg_label) - as.numeric(verify_4)
 # just check
 recalibrate_verify_4  <-ifelse( delta_4 < 0 , verify_4 + delta_4, ifelse( delta_4 > 0, verify_4+ delta_4, verify_4))
 # End of training 
-
-xg_testing <- testing |> 
-                   dplyr::mutate( pulley_category = as.integer(factor(pulley_category)),
-                                  functional_location = as.integer(factor(functional_location))) |>
-                   dplyr::select(pulley_category, functional_location )
 xg_label <-  testing$bin_time
+xg_testing <- testing |>
+                 dplyr::select( -bin_time )
+
 testing_xgboost <-xgb.DMatrix(data = as.matrix(xg_testing),   label = xg_label)
 testing_predict <-predict(model_3, newdata = testing_xgboost)
 xg_testing$full_predict <- testing_predict
@@ -397,13 +402,76 @@ xg_testing$delta_3      <- testing_predict -3
 xg_testing$delta_4      <- testing_predict -4
 testing_xgboost_2 <-xgb.DMatrix(data = as.matrix(xg_testing),   label = xg_label)
 testing_predict_2 <-predict(model_4, newdata = testing_xgboost_2)
-#'
+#end testing
 decimal_predict <- testing_predict_2 - floor(testing_predict_2)
 testing_predict_end <-ifelse( decimal_predict  > .5, floor(testing_predict_2)+1 , floor(testing_predict_2))
 
 confusionMatrix(factor(testing_predict_end),
                 factor( as.integer(xg_label)),
                 mode = "everything")
+```
+## Ensemble 
+
+In this section, we build an ensemble model, we use **caretEnsemble** to build the ensemble. We can notice that the prediction with two models **glm** and **random forest** is not accurate. We shall never go toward one or four. 
+
+```{r ensemble_caret, echo=FALSE, warning=FALSE}
+# we have factor not in test
+set.seed(998)
+material_ensemble <- material_data  |> 
+                                  dplyr::mutate( pulley_category = factor(pulley_category),
+                                                functional_location = factor(functional_location)) |>
+                                  dplyr::select(pulley_category, functional_location, bin_time ) |>
+                                  dplyr::filter( !is.na(functional_location)) |>
+                                  dplyr::mutate( bin_num = as.integer( bin_time)) |>
+                                  dplyr::select(-bin_time)
+
+inTraining <- createDataPartition(material_ensemble$bin_num, p = .9, list = FALSE)
+ensemble_training <- material_ensemble[ inTraining,]
+ensemble_testing  <- material_ensemble[-inTraining,]
+
+
+
+
+my_control <- trainControl(
+  method="boot",
+  number=25,
+  savePredictions="final",
+  index=createResample(ensemble_training$bin_num, 25)
+  )
+
+# gradient boostin and rf 
+model_ensemble <- caretList(
+                  bin_num~., 
+                  data= ensemble_training,
+                  trControl =my_control,
+                  methodList=c("glm", "rpart","xgbTree")
+                  )
+
+predict_ensemble <- as.data.frame(predict(model_ensemble, newdata=ensemble_testing ))
+
+
+stack_ensemble <- caretStack(
+                  model_ensemble,
+                  method="glm",
+                  metric="RMSE",
+                  trControl=trainControl(
+                            method="boot",
+                            number=10,
+                            savePredictions="final"
+                  )
+                 )
+
+predict_ensemble_2 <- as.data.frame(predict(stack_ensemble, newdata=ensemble_testing)) 
+
+dsp_predict_org <-data.frame( predict = predict_ensemble_2[,1],
+                             org =ensemble_testing$bin_num,
+                             index= seq(1,nrow(predict_ensemble_2),1))
+
+ggplot( data = dsp_predict_org) +
+        geom_point( aes(x=index,y= predict), col="orange") +
+        geom_point(aes(x=index, y=org), col="blue") +
+        theme_minimal()+
+        labs(title="Prediction stacking")
 ```
 
 
