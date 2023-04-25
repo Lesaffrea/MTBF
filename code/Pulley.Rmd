@@ -414,7 +414,7 @@ confusionMatrix(factor(testing_predict_end),
 
 In this section, we build an ensemble model, we use **caretEnsemble** to build the ensemble. We can notice that the prediction with two models **glm**, **random forest** and **boostimg tree*  is not accurate. We shall never go toward one or four. 
 
-```{r ensemble_caret, echo=FALSE, warning=FALSE}
+```{r ensemble_caret, echo=FALSE, warning=FALSE, message=FALSE}
 # we have factor not in test
 set.seed(998)
 material_ensemble <- material_data  |> 
