@@ -476,7 +476,7 @@ ggplot( data = dsp_predict_org) +
 dsp_predict_org$residual_test <- dsp_predict_org$predict -dsp_predict_org$org 
 ```
 
-The residual versus the predicted is show below, we have an increase ir decreas in resiudal futher in valuw we predict. 
+The residual versus the predicted is show below, we have an increase  in residual futher in value we predict. 
 
 ```{r ensemble_residual, echo=FALSE}
 ggplot(dsp_predict_org, aes(x = predict, y = residual_test)) + 
