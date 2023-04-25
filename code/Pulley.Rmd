@@ -429,9 +429,6 @@ inTraining <- createDataPartition(material_ensemble$bin_num, p = .9, list = FALS
 ensemble_training <- material_ensemble[ inTraining,]
 ensemble_testing  <- material_ensemble[-inTraining,]
 
-
-
-
 my_control <- trainControl(
   method="boot",
   number=25,
@@ -447,7 +444,7 @@ model_ensemble <- caretList(
                   methodList=c("glm", "rpart","xgbTree")
                   )
 
-predict_ensemble <- as.data.frame(predict(model_ensemble, newdata=ensemble_testing ))
+predict_ensemble <- as.data.frame(predict(model_ensemble, newdata=ensemble_testing , verbose=FALSE))
 
 
 stack_ensemble <- caretStack(
@@ -461,7 +458,7 @@ stack_ensemble <- caretStack(
                   )
                  )
 
-predict_ensemble_2 <- as.data.frame(predict(stack_ensemble, newdata=ensemble_testing)) 
+predict_ensemble_2 <- as.data.frame(predict(stack_ensemble, newdata=ensemble_testing, verbose=FALSE)) 
 
 dsp_predict_org <-data.frame( predict = predict_ensemble_2[,1],
                              org =ensemble_testing$bin_num,
