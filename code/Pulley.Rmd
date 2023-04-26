@@ -296,7 +296,7 @@ We calculate the coefficient of contamination as mentioned, which are, those val
 knitr::kable( dps_time |> dplyr::select(-index))
 ```
 
-This device is across multiple functional location and but same plant, the functional loacation are as follow, we can notice the difference in time to failure inside a functional location, which add a complication. 
+This device is across multiple functional locations but same plant, the functional locations are as follow, we can notice the difference in time to failure inside a functional location, which add a complication. 
 
 ```{r dsp_Location, echo=FALSE}
 knitr::kable(example_device[, c("functional_location", "failure_time", "pulley_category", "description")])
@@ -304,7 +304,7 @@ knitr::kable(example_device[, c("functional_location", "failure_time", "pulley_c
 
 # Considering the full data set 
 
-We make the hypothesis that the environment influence the time between failure, therefore we have a factor to define to do so we consider the full data set with bins. One challenge is the number of functional location of more than 1500. 
+We make the hypothesis that the environment influences the time between failure, therefore we have a factor to define to do so we consider the full data set with bins. One challenge is the number of functional location of more than 1500. But the model is able to deal with this number. 
 
 ```{r full, echo=FALSE, warning=FALSE}
 material_data_set <- material_data_set |> 
@@ -342,7 +342,7 @@ delta_2 <- as.integer(xg_label) - as.numeric(verify_2)
 recalibrate_verify_2  <-ifelse( delta_2 < 0 , verify_2 + delta_2, ifelse( delta_2 > 0, verify_2+ delta_2, verify_2))
 ```
 
-We have a prediction on numeric and therefore we recalibrate, the confusion matrix is shown below (* we certainly overfit in this case *), but we show that we can have a pretty good prediction on class of time to failure. 
+We have a prediction on numeric and therefore we recalibrate, the confusion matrix is shown below (* we certainly over-fit in this case *), but we show that we can have a pretty good prediction on class of time to failure. 
 
 ```{r cobnfusion_matrix, echo=FALSE}
 # We show the results
@@ -354,7 +354,7 @@ confusionMatrix(factor(recalibrate_verify_2),
 
 ## Building an universal model
 
-The previous chapter does not use a test set, in this section we shall use a training set made of .9 of the initial data set and a test set. We do not manage without rebuilding models as shown below, we use a tree method and therefor the model could change drastically with few data changes as it is the case here
+The previous chapter does not use a test set, in this section we shall use a training set made of .9 of the initial data set and a test set. We do not manage without rebuilding models as shown below, we use a tree methods and therefore the model could change drastically with few data changes as it is the case here.
 
 ```{r final_model, echo=FALSE,warning=FALSE, message=FALSE}
 set.seed(998)
@@ -412,7 +412,7 @@ confusionMatrix(factor(testing_predict_end),
 ```
 ## Ensemble 
 
-In this section, we build an ensemble model, we use **caretEnsemble** to build the ensemble. We can notice that the prediction with two models **glm**, **random forest** and **boostimg tree*  is not accurate. We shall never go toward one or four. 
+In this section, we build an ensemble model, we use **caretEnsemble** to build the ensemble. We can notice that the prediction with three models **glm**, **random forest** and **boosting tree*  is not accurate. We shall never go toward one or four. 
 
 ```{r ensemble_caret, echo=FALSE, warning=FALSE, message=FALSE}
 # we have factor not in test
@@ -473,7 +473,7 @@ ggplot( data = dsp_predict_org) +
 dsp_predict_org$residual_test <- dsp_predict_org$predict -dsp_predict_org$org 
 ```
 
-The residual versus the predicted is show below, we have an increase  in residual futher in value we predict. 
+The residual versus the predicted is show below, we have an increase  in residual further in value we predict. 
 
 ```{r ensemble_residual, echo=FALSE}
 ggplot(dsp_predict_org, aes(x = predict, y = residual_test)) + 
