@@ -342,7 +342,7 @@ delta_2 <- as.integer(xg_label) - as.numeric(verify_2)
 recalibrate_verify_2  <-ifelse( delta_2 < 0 , verify_2 + delta_2, ifelse( delta_2 > 0, verify_2+ delta_2, verify_2))
 ```
 
-We have a prediction on numeric and therefore we recalibrate, the confusion is a sbelow, we certainly overfir in this case, but we show that we can have a pretty good prediction on class of time to failure. 
+We have a prediction on numeric and therefore we recalibrate, the confusion matrix is shown below (* we certainly overfit in this case *), but we show that we can have a pretty good prediction on class of time to failure. 
 
 ```{r cobnfusion_matrix, echo=FALSE}
 # We show the results
