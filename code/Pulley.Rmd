@@ -238,7 +238,7 @@ example_device <-example_device |>
                       dplyr::mutate( bin_time = cut(failure_time, breaks=c(0,100,500,2000, 3500), include.lowest = TRUE))
 ```
 
-In this sample rebuilt with slection of materail description, we have same devices with significant difference in time to failure. It means we have conditions, which will reduce the time to failure in this case. It appears that we have few exceptions with low time to failures, which must be analysed.
+In this sample rebuilt with selection of material description, we have same devices with significant difference in time to failure. It means we have conditions, which will reduce the time to failure in this case. It appears that we have few exceptions with low time to failures, which must be analysed.
 
 What is a surprise is the spread of time to failures, concerning the same material description, as shown below we could have more than 2000 days difference in time to failure for the same material description. 
 
@@ -304,7 +304,7 @@ knitr::kable(example_device[, c("functional_location", "failure_time", "pulley_c
 
 # Considering the full data set 
 
-We make the hypothesis that the environment influence the time between failure, therefore we have a factor to difine to do so we consider the full data set with bins. One challenge is the number of functional location of more than 1500. 
+We make the hypothesis that the environment influence the time between failure, therefore we have a factor to define to do so we consider the full data set with bins. One challenge is the number of functional location of more than 1500. 
 
 ```{r full, echo=FALSE, warning=FALSE}
 material_data_set <- material_data_set |> 
